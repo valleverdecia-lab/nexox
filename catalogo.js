@@ -1,0 +1,2 @@
+const CATALOGO=[];
+const GRUPOS={"alimentos":{"nombre":"Alimentos","subs":["Minorista","Mayorista"]},"aseo":{"nombre":"Aseo","subs":["Minorista","Mayorista"]},"medicamentos":{"nombre":"Medicamentos","subs":[]}};
