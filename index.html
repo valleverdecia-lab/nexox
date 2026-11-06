@@ -12,6 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=15">
 <link rel="stylesheet" href="nexox-premium.css?v=1">
+<link rel="stylesheet" href="showroom-3d.css?v=1">
 <meta property="og:title" content="Nexo — Catálogo de productos para Cuba">
 <meta property="og:description" content="Más de 340 productos con foto real y precio claro. Entrega a domicilio y atención directa por WhatsApp.">
 <meta property="og:type" content="website">
@@ -314,6 +315,35 @@
   </div>
 </section>
 
+<!-- ============ SHOWROOM 3D ============ -->
+<section id="showroom" class="showroom-3d" aria-labelledby="showroom-title">
+  <div class="showroom-stage">
+    <canvas id="showroom-canvas" aria-hidden="true"></canvas>
+    <div class="showroom-gridline" aria-hidden="true"></div>
+    <div class="showroom-copy">
+      <p class="lbl mono">[ 04 — Showroom ]</p>
+      <h2 id="showroom-title">Mire lo que<br><em>puede cambiar.</em></h2>
+      <p class="showroom-lead">Una selección real del catálogo, presentada para comparar con calma. Desplace para explorar; toque cualquier producto para abrir su ficha completa.</p>
+      <a class="cta cta-linea magnet" href="#catalogo">Explorar el catálogo <span aria-hidden="true">↓</span></a>
+    </div>
+    <div class="showroom-products" aria-label="Selección de productos del catálogo">
+      <button class="showroom-product" type="button" data-showroom-id="split-eko-1-5-toneladas" aria-label="Ver Split Eko de 1.5 toneladas">
+        <span class="showroom-product-index mono">01 / CLIMA</span><span class="showroom-product-name">Confort que se nota.</span>
+        <img src="fotos/split-eko-1-5-toneladas.webp" alt="Split Eko de 1.5 toneladas" loading="lazy">
+      </button>
+      <button class="showroom-product" type="button" data-showroom-id="combo-inversor-6-kw-bateria-15-kwh-paneles" aria-label="Ver combo de inversor, batería y paneles">
+        <span class="showroom-product-index mono">02 / ENERGÍA</span><span class="showroom-product-name">Energía para seguir.</span>
+        <img src="fotos/combo-inversor-6-kw-bateria-15-kwh-paneles.webp" alt="Combo de inversor, batería y paneles solares" loading="lazy">
+      </button>
+      <button class="showroom-product" type="button" data-showroom-id="refrigerador-lg-de-11-pies" aria-label="Ver refrigerador LG de 11 pies">
+        <span class="showroom-product-index mono">03 / HOGAR</span><span class="showroom-product-name">Más espacio para vivir.</span>
+        <img src="fotos/refrigerador-lg-de-11-pies.webp" alt="Refrigerador LG de 11 pies" loading="lazy">
+      </button>
+    </div>
+    <p class="showroom-note mono">SCROLL / OBJETO INTERACTIVO</p>
+  </div>
+</section>
+
 <!-- ============ RESEÑAS ============ -->
 <section id="resenas" class="resenas">
   <div class="pad">
@@ -519,10 +549,12 @@
 
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" defer></script>
 <script src="catalogo.js?v=ar1" defer></script>
 <script src="esfera.js?v=6" defer></script>
 <script src="micro.js?v=7" defer></script>
 <script src="nexox-motion.js?v=1" defer></script>
+<script src="showroom-3d.js?v=1" defer></script>
 <script src="app.js?v=sug1" defer></script>
 </body>
 </html>

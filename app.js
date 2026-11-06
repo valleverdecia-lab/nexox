@@ -324,6 +324,7 @@ function abrir(id){
   pos.textContent=position>=0?`${position+1} / ${lista.length}`:"";
   if(!modal.open)modal.showModal();document.body.style.overflow="hidden";
 }
+window.nexoOpenProduct=abrir;
 $("#vitrina").addEventListener("click",e=>{
   const add=e.target.closest("[data-add]");
   if(add){
