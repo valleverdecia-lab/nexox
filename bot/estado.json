@@ -1,0 +1,15 @@
+{
+ "offset": 845583967,
+ "owner": 1780253597,
+ "pend": {
+  "1780253597": {
+   "tipo": "nuevo",
+   "modo": "lenta",
+   "paso": "l-nombre",
+   "datos": {},
+   "fotos": [],
+   "fotosTotal": 0,
+   "video": null
+  }
+ }
+}

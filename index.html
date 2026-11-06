@@ -3,13 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Nexox — Catálogo</title>
-<meta name="description" content="Catálogo Nexox: alimentos, aseo y medicamentos. Precios en USD, atención por WhatsApp.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9' fill='%23062B8A'/></svg>">
+<title>Nexo — Catálogo de productos para Cuba</title>
+<meta name="description" content="Catálogo Nexo: más de 340 productos para el hogar, energía y movilidad en Cuba. Fotos reales, precios claros, entrega a domicilio y atención por WhatsApp.">
+<meta name="theme-color" content="#05070c">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9' fill='%2367D9FF'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=4">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=15">
+<meta property="og:title" content="Nexo — Catálogo de productos para Cuba">
+<meta property="og:description" content="Más de 340 productos con foto real y precio claro. Entrega a domicilio y atención directa por WhatsApp.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="fotos/arte-nexo.png">
+<meta property="og:url" content="https://valleverdecia-lab.github.io/nexo/">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Nexo","url":"https://valleverdecia-lab.github.io/nexo/","contactPoint":{"@type":"ContactPoint","telephone":"+53-56865093","contactType":"customer service","availableLanguage":"Spanish"}}</script>
 </head>
 <body>
 <div class="grain" aria-hidden="true"></div>
@@ -21,118 +28,434 @@
     <button id="menu-btn" class="menu-btn" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu-movil">
       <span></span><span></span><span></span>
     </button>
-    <a href="#inicio" class="logo"><i></i>Nexox</a>
-    <div class="nav-der"><span id="sec" class="m"></span><a class="cta glass" id="nav-wa" href="https://wa.me/5356865093?text=Hola%2C%20los%20vi%20en%20la%20p%C3%A1gina." target="_blank" rel="noopener">WhatsApp ↗</a></div>
+    <a href="#inicio" class="logo"><i></i>Nexo</a>
+    <div class="nav-der">
+      <span id="sec" class="m"></span>
+      <a class="cta cta-linea magnet" href="#catalogo">Catálogo</a>
+      <a class="cta cta-linea magnet" href="#resenas">Opiniones</a>
+      <a class="cta cta-llena magnet" id="nav-wa" href="https://wa.me/5356865093?text=Hola%2C%20los%20vi%20en%20la%20p%C3%A1gina." target="_blank" rel="noopener">WhatsApp <span aria-hidden="true">↗</span></a>
+    </div>
   </nav>
 </header>
 
 <div id="menu-movil" hidden>
   <nav aria-label="Categorías">
     <p class="menu-titulo m">Categorías</p>
-    <a class="menu-grupo" href="#catalogo" data-g="">Todo el catálogo <span class="menu-n m" id="mn-todo"></span></a>
+    <a class="menu-grupo" href="#catalogo" data-g="">Todo el catálogo<span class="menu-n" id="mn-todo"></span></a>
     <div id="menu-grupos"></div>
     <div class="menu-extra">
-      <a href="#resenas">Testimonios</a>
-      <a href="https://wa.me/5356865093?text=Hola%2C%20los%20vi%20en%20la%20p%C3%A1gina." target="_blank" rel="noopener">WhatsApp</a>
+      <a class="menu-grupo" href="#resenas">Opiniones de clientes</a>
+      <a class="menu-grupo" href="#contacto">Contacto y dirección</a>
     </div>
   </nav>
 </div>
 
 <main>
-  <section id="inicio">
-    <div class="orb" aria-hidden="true"></div>
-    <canvas id="esfera" aria-hidden="true"></canvas>
-    <div class="hero-cont">
-      <p class="m kicker">Catálogo · 2026</p>
-      <h1 class="d" id="h1">Todo para tu <em class="ember">hogar.</em></h1>
-      <div class="sub">
-        <p>Alimentos, aseo y medicamentos con precios claros en USD y entrega en La Habana. Lo que ve es lo que llega.</p>
+
+<!-- ============ HERO ============ -->
+<section id="inicio" class="hero">
+  <div class="hero-arte" aria-hidden="true"></div>
+  <div class="hero-grad" aria-hidden="true"></div>
+
+  <div class="hero-cuerpo">
+    <div class="hero-txt">
+      <p class="lbl mono">[ 01 — Catálogo Nexo 2026 ]</p>
+      <h1 class="hero-h">
+        <span class="h-linea"><span>Todo para su hogar.</span></span>
+        <span class="h-linea"><span>En <em>un solo lugar</em>.</span></span>
+      </h1>
+      <p class="hero-sub">Más de 340 productos con foto real y precio claro: climatización, refrigeración, energía, limpieza y más. Entrega a domicilio y atención directa por WhatsApp.</p>
+      <div class="hero-ctas">
+        <a class="cta cta-llena magnet" href="https://wa.me/5356865093?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20los%20productos%20de%20Nexo." target="_blank" rel="noopener">Escribir por WhatsApp <span aria-hidden="true">↗</span></a>
+        <a class="cta cta-linea magnet" href="#catalogo">Ver catálogo <span aria-hidden="true">↓</span></a>
+      </div>
+      <ul class="hero-check m">
+        <li>Precio claro en USD</li>
+        <li>Envío a domicilio</li>
+        <li>Existencias confirmadas</li>
+        <li>Llamada gratis antes de pagar</li>
+      </ul>
+    </div>
+    <div class="hero-esfera">
+      <canvas id="esfera" aria-hidden="true"></canvas>
+      <p class="hero-esfera-hint mono m">Arrastre la esfera</p>
+    </div>
+  </div>
+
+  <div class="hero-vitrina" aria-hidden="true">
+    <div class="hero-vitrina-track">
+      <img src="fotos/split-eko-1-5-toneladas.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/bateria-lifepo4-de-12-8v-200ah.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/refrigerador-lg-de-11-pies.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/lavadora-automatica-10-kg.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/inversor-sumry-4000w.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/planta-electrica-total.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/bicicleta-electrica-movcan-v30.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/sillon-reclinable-negro.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/equipo-de-musica-lg-xboom.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/congelador-freezer-hisense-15-pies.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/piscina-desmontable.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/combo-inversor-6-kw-bateria-15-kwh-paneles.webp" alt="" loading="lazy" decoding="async">
+    
+      <img src="fotos/split-eko-1-5-toneladas.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/bateria-lifepo4-de-12-8v-200ah.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/refrigerador-lg-de-11-pies.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/lavadora-automatica-10-kg.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/inversor-sumry-4000w.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/planta-electrica-total.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/bicicleta-electrica-movcan-v30.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/sillon-reclinable-negro.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/equipo-de-musica-lg-xboom.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/congelador-freezer-hisense-15-pies.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/piscina-desmontable.webp" alt="" loading="lazy" decoding="async">
+      <img src="fotos/combo-inversor-6-kw-bateria-15-kwh-paneles.webp" alt="" loading="lazy" decoding="async">
+    </div>
+  </div>
+
+  <a class="hero-scroll mono m" href="#stats" aria-label="Bajar">Scroll ↓</a>
+</section>
+
+<!-- ============ MARQUEE ============ -->
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-track">
+    <span>Envío a domicilio · Precio claro en USD · Existencias confirmadas · Atención directa por WhatsApp · Vídeo-demo por WhatsApp · Envío a domicilio · Precio claro en USD · Existencias confirmadas · Atención directa por WhatsApp · Vídeo-demo por WhatsApp ·&nbsp;</span>
+    <span>Envío a domicilio · Precio claro en USD · Existencias confirmadas · Atención directa por WhatsApp · Vídeo-demo por WhatsApp · Envío a domicilio · Precio claro en USD · Existencias confirmadas · Atención directa por WhatsApp · Vídeo-demo por WhatsApp ·&nbsp;</span>
+  </div>
+</div>
+
+<!-- ============ STATS ============ -->
+<section id="stats" class="stats">
+  <div class="pad">
+    <div class="stats-grid">
+      <div class="stat">
+        <p class="stat-n mono"><span class="odo" data-n="340" data-suf="+">0</span></p>
+        <p class="stat-t">productos en catálogo</p>
+      </div>
+      <div class="stat">
+        <p class="stat-n mono"><span class="odo" data-n="16" data-suf="">0</span></p>
+        <p class="stat-t">categorías para el hogar</p>
+      </div>
+      <div class="stat">
+        <p class="stat-n mono"><span class="odo" data-n="5" data-suf="/5">0</span></p>
+        <p class="stat-t">opiniones publicadas de clientes</p>
+      </div>
+      <div class="stat">
+        <p class="stat-n mono"><span class="odo" data-n="1" data-suf="">0</span></p>
+        <p class="stat-t">chat directo: una persona le responde</p>
       </div>
     </div>
-    <a href="#catalogo" class="scroll"><span class="mouse"><i></i></span>Desliza</a>
-  </section>
+    <p class="sec-nota m">Datos del catálogo y de las opiniones publicadas en esta misma página.</p>
+  </div>
+</section>
 
-  <div class="mq" aria-hidden="true"><div>
-    <span>Envíos a domicilio</span><span>Garantía real</span><span>Atención por WhatsApp</span><span>Precios en USD</span>
-    <span>Envíos a domicilio</span><span>Garantía real</span><span>Atención por WhatsApp</span><span>Precios en USD</span>
-  </div></div>
+<!-- ============ PRESENTACIÓN ============ -->
+<section id="presentacion" class="presentacion">
+  <div class="pad">
+    <p class="lbl mono">[ 02 — Por qué Nexo ]</p>
+    <h2>Comprar por internet,<br>sin sorpresas.</h2>
+    <div class="bento">
+      <article class="bento-tile bento-a">
+        <p class="bento-num mono">[ 01 ]</p>
+        <h3>Energía que responde</h3>
+        <p>Baterías de litio, inversores, plantas solares y grupos electrógenos con soporte técnico para lo que vendemos.</p>
+      </article>
+      <article class="bento-tile bento-b">
+        <p class="bento-num mono">[ 02 ]</p>
+        <h3>Desde fuera de Cuba</h3>
+        <p>¿Está en el exterior? Haga feliz a su familia y resuelva sus problemas desde allá: elija el producto y nosotros lo entregamos en su puerta en Cuba, con foto real y confirmación de la entrega.</p>
+      </article>
+      <article class="bento-tile bento-c">
+        <p class="bento-num mono">[ 03 ]</p>
+        <h3>Compra sin preocupaciones</h3>
+        <p>Antes de comprar, puede solicitar una <strong>llamada gratuita</strong> para aclarar dudas sobre el producto y la entrega, con atención personalizada de principio a fin.</p>
+        <p class="bento-pregunta">¿Solo quiere preguntar si podemos resolver su problema, sin presión de comprar? <a class="bento-link" href="https://wa.me/5356865093?text=Hola%2C%20solo%20quiero%20hacer%20una%20consulta%20sin%20compromiso." target="_blank" rel="noopener">Haz clic aquí</a></p>
+      </article>
+      <article class="bento-tile bento-d">
+        <img src="fotos/combo-inversor-6-kw-bateria-15-kwh-paneles.webp" alt="Combo de inversor 6 kW con batería y paneles solares" loading="lazy" decoding="async">
+        <p class="bento-num mono">[ 04 ]</p>
+        <h3>Foto real, precio real</h3>
+        <p>Lo que ve es lo que llega. Si un producto está agotado, lo decimos — y le avisamos cuando vuelve.</p>
+      </article>
+    </div>
+  </div>
+</section>
 
-  <section id="catalogo" class="pad">
-    <div class="lbl"><b>01</b><i></i>Catálogo</div>
-    <h2 class="d">Encuentre su <em>pieza.</em></h2>
-    <p class="sec-nota">Use las categorías del menú, busque por nombre u ordene por precio. Tocar cualquier producto abre su ficha completa con especificaciones.</p>
+<!-- ============ CATÁLOGO ============ -->
+<section id="catalogo" class="catalogo">
+  <div class="catalogo-cielo" aria-hidden="true"></div>
+  <div class="pad">
+    <div class="duo-wrap" aria-hidden="true">
+      <div class="duo-panel duo-i"><span>Nexo</span></div>
+      <div class="duo-panel duo-d"><span>2026</span></div>
+    </div>
 
-    <div class="filtros glass glow">
-      <div class="tabs" id="tabs" role="tablist">
-        <button class="tab on" data-g="">Todo</button>
-        <button class="tab" data-g="alimentos">Alimentos</button>
-        <button class="tab" data-g="aseo">Aseo</button>
-        <button class="tab" data-g="medicamentos">Medicamentos</button>
+    <p class="lbl mono">[ 03 — Catálogo ]</p>
+    <h2>El catálogo <em>se abre</em>.</h2>
+    <p class="sec-nota">Fotos reales, estado de disponibilidad y precio de cada producto. Añada al carrito y envíenos la lista completa por WhatsApp.</p>
+
+    <div class="filtros">
+      <div class="tabs-row">
+        <div id="tabs" class="tabs" role="tablist" aria-label="Grupos de productos">
+          <button class="tab on" data-g="" role="tab" aria-selected="true">Todo</button>
+          <button class="tab" data-g="hogar" role="tab" aria-selected="false">Hogar</button>
+          <button class="tab" data-g="vehiculos" role="tab" aria-selected="false">Vehículos</button>
+        </div>
+        <div class="filtros-der">
+          <label class="buscar">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="buscar" type="search" placeholder="Buscar producto…" autocomplete="off" enterkeyhint="search">
+          </label>
+          <label class="orden-lbl m">
+            <span class="m">Ordenar</span>
+            <select id="orden" aria-label="Ordenar productos">
+              <option value="rel">Relevancia</option>
+              <option value="asc">Precio: menor a mayor</option>
+              <option value="desc">Precio: mayor a menor</option>
+              <option value="nombre">Nombre A–Z</option>
+            </select>
+          </label>
+        </div>
       </div>
-      <div class="chips" id="chips" aria-label="Subcategorías"></div>
-      <div class="fila-buscar">
-        <input type="search" id="buscar" placeholder="Buscar: arroz, jabón, paracetamol…" maxlength="60" aria-label="Buscar en el catálogo">
-        <label class="solo-lector" for="orden">Ordenar por</label>
-        <select id="orden" aria-label="Ordenar por">
-          <option value="rel">Más relevante</option>
-          <option value="asc">Precio: menor a mayor</option>
-          <option value="desc">Precio: mayor a menor</option>
-          <option value="nombre">Nombre (A–Z)</option>
+      <div id="chips" class="chips" aria-label="Categorías"></div>
+    </div>
+
+    <p id="cuenta" class="cuenta m" aria-live="polite"></p>
+    <div id="vitrina" class="vitrina"></div>
+
+    <div id="vacio" class="vacio" hidden>
+      <p class="vacio-t d" id="vacio-t">Sin resultados.</p>
+      <p class="vacio-n m" id="vacio-n">Pruebe otra palabra o quite los filtros.</p>
+      <a id="vacio-wa" class="cta cta-linea" href="https://wa.me/5356865093?text=Hola%2C%20%C2%BFme%20pueden%20avisar%20cuando%20llegue%20mercanc%C3%ADa%20nueva%3F" target="_blank" rel="noopener" hidden>Avisarme por WhatsApp <span aria-hidden="true">↗</span></a>
+    </div>
+
+    <div class="mas-wrap">
+      <button id="mas" class="cta cta-linea magnet">Ver más productos</button>
+    </div>
+    <div id="sugerencias" class="sugerencias" hidden>
+      <p class="lbl mono">[ Sugerencias para usted ]</p>
+      <h3>¿Cuál es el próximo que quiere ver?</h3>
+      <div class="sug-grid" id="sug-grid"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ENTREGA ============ -->
+<section id="envio" class="envio">
+  <div class="pad">
+    <div class="envio-cab">
+      <div>
+        <p class="lbl mono">[ 03.5 — Entrega ]</p>
+        <h2>Vea cuánto cuesta llevarlo.</h2>
+        <div class="envio-ruta" aria-hidden="true">
+          <svg class="envio-camion" viewBox="0 0 64 36" role="presentation" focusable="false">
+            <path d="M3 7h34v21H3zM37 14h12l10 9v5H37z" fill="#fff"/>
+            <path d="M41 17h7l6 6H41z" fill="#9ddcf2"/>
+            <circle cx="16" cy="29" r="6" fill="#fff"/><circle cx="16" cy="29" r="2.5" fill="#263347"/>
+            <circle cx="49" cy="29" r="6" fill="#fff"/><circle cx="49" cy="29" r="2.5" fill="#263347"/>
+          </svg>
+        </div>
+        <p class="sec-nota">Elija su municipio y le damos una estimación antes de que escriba por WhatsApp. El precio final se confirma con usted antes de pagar.</p>
+      </div>
+      <p class="envio-confianza mono">PRECIO ORIENTATIVO<br><span>CONFIRMACIÓN HUMANA</span></p>
+    </div>
+    <div class="envio-caja">
+      <label class="envio-campo">
+        <span class="m">¿A dónde va el pedido?</span>
+        <select id="envio-zona" aria-describedby="envio-ayuda">
+          <option value="">— Elija el municipio —</option>
+          <optgroup label="La Habana">
+            <option value="habana-vieja">La Habana Vieja</option><option value="centro-habana">Centro Habana</option><option value="plaza">Plaza de la Revolución</option><option value="vedado">Vedado</option><option value="cerro">Cerro</option><option value="diez-de-octubre">Diez de Octubre</option><option value="playa">Playa</option><option value="marianao">Marianao</option><option value="la-lisa">La Lisa</option><option value="regla">Regla</option><option value="habana-del-este">La Habana del Este</option><option value="guanabacoa">Guanabacoa</option><option value="san-miguel">San Miguel del Padrón</option><option value="arroyo-naranjo">Arroyo Naranjo</option><option value="boyeros">Boyeros</option><option value="cotorro">Cotorro</option><option value="guanabo">Guanabo</option><option value="boca-ciega">Boca Ciega</option><option value="campo-florido">Campo Florido</option><option value="tarara">Tarará</option>
+          </optgroup>
+          <optgroup label="Alrededores y otras provincias">
+            <option value="bauta">Bauta</option><option value="artemisa">Artemisa</option><option value="san-jose">San José de las Lajas</option><option value="otra">Otro municipio</option>
+          </optgroup>
         </select>
+      </label>
+      <button id="envio-calcular" class="cta cta-llena" type="button">Calcular estimación <span aria-hidden="true">→</span></button>
+      <div id="envio-resultado" class="envio-resultado" role="status" aria-live="polite" hidden>
+        <div><span class="m">Destino</span><strong id="envio-lugar">—</strong></div>
+        <div><span class="m">Entrega estimada</span><strong id="envio-precio">—</strong></div>
+        <p id="envio-letra" class="m"></p>
       </div>
-      <p class="m cuenta" id="cuenta"></p>
+      <p id="envio-ayuda" class="envio-ayuda m">Si su municipio no aparece, escríbanos y confirmamos la entrega por WhatsApp.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CÓMO FUNCIONA ============ -->
+<section id="como" class="como">
+  <div class="pad">
+    <p class="lbl mono">[ 04 — Cómo funciona ]</p>
+    <h2>Tres pasos.<br>Cero vueltas.</h2>
+    <div class="como-track">
+      <div class="como-fijo">
+        <p class="como-num mono" id="como-num">01</p>
+        <div class="como-barra" aria-hidden="true"><i></i></div>
+      </div>
+      <ol class="como-pasos">
+        <li class="como-paso" data-paso="1">
+          <p class="mono m">Paso 01</p>
+          <h3>Elige</h3>
+          <p>Navegue el catálogo con calma, compare precios y añada al carrito lo que necesite. Cada ficha muestra foto real, especificaciones y estado.</p>
+        </li>
+        <li class="como-paso" data-paso="2">
+          <p class="mono m">Paso 02</p>
+          <h3>Confirme</h3>
+          <p>Un clic y su lista completa llega a nuestro WhatsApp. Le confirmamos existencias y costo de envío antes de que pague nada.</p>
+        </li>
+        <li class="como-paso" data-paso="3">
+          <p class="mono m">Paso 03</p>
+          <h3>Reciba</h3>
+          <p>Coordinamos la entrega a domicilio. Si el producto incluye instalación o asesoría, le ayudamos con eso también.</p>
+        </li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RESEÑAS ============ -->
+<section id="resenas" class="resenas">
+  <div class="pad">
+    <p class="lbl mono">[ 05 — Opiniones ]</p>
+    <h2>Lo que dicen<br>quienes ya compraron.</h2>
+    <div class="carrusel">
+      <div class="carrusel-cab">
+        <div id="testimonial-dots" class="dots" aria-label="Seleccionar testimonio"></div>
+        <div class="carrusel-flechas">
+          <button id="prev" class="flecha" aria-label="Testimonio anterior">←</button>
+          <button id="next" class="flecha" aria-label="Testimonio siguiente">→</button>
+        </div>
+      </div>
+      <div class="riel-wrap"><ul id="riel" class="riel"></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ OPORTUNIDAD (card swap) ============ -->
+<section id="oportunidad" class="oportunidad">
+  <div class="pad">
+    <p class="lbl mono">[ 06 — Oportunidad ]</p>
+    <h2>Somos una oportunidad<br>para…</h2>
+    <p class="sec-nota">Toque la carta para ver la siguiente. Cada una cuenta por qué.</p>
+
+    <div class="swap" id="swap" aria-label="Para quién es Nexo una oportunidad">
+      <article class="swap-card" data-swap>
+        <p class="swap-k mono m">[ 01 ]</p>
+        <h3>Sus clientes</h3>
+        <p class="swap-grande">Comprar a ciegas se acabó.</p>
+        <p>En Cuba, pedir algo por internet es un salto al vacío: foto genérica, precio oculto, vendedor que desaparece. Aquí cada producto trae foto real, precio claro y una <strong>llamada gratuita antes de pagar</strong> para que pregunte todo lo que quiera. Si no le convence, no compra.</p>
+      </article>
+      <article class="swap-card" data-swap>
+        <p class="swap-k mono m">[ 02 ]</p>
+        <h3>Personas en el exterior</h3>
+        <p class="swap-grande">Regale a los suyos sin estar ahí.</p>
+        <p>Está fuera de Cuba y quiere ayudar a su familia: elija el producto, pague desde donde esté y <strong>nosotros lo entregamos en la puerta de su mamá, su abuela, su hijo</strong>. Sin intermediarios y sin pedidos a ciegas: foto real del producto, precio claro y confirmación de la entrega por WhatsApp. Usted resuelve desde allá; ellos reciben acá.</p>
+      </article>
+      <article class="swap-card" data-swap>
+        <p class="swap-k mono m">[ 03 ]</p>
+        <h3>Sus clippers</h3>
+        <p class="swap-grande">Monetice su audiencia sin logística.</p>
+        <p>Comparta nuestros productos en sus canales: cada venta que llegue por usted genera <strong>comisión</strong>. Foto, ficha, existencias y entrega las llevamos nosotros. Usted solo comparte el enlace y cobra.</p>
+      </article>
+      <article class="swap-card" data-swap>
+        <p class="swap-k mono m">[ 04 ]</p>
+        <h3>Sus proveedores</h3>
+        <p class="swap-grande">Su producto, frente a todo el país.</p>
+        <p>Si produce o importa, publicamos su mercancía con <strong>ficha profesional y fotos reales</strong>, y la distribuimos a nuestra red de gestores y clippers. Usted vende más sin gastar un peso en marketing.</p>
+      </article>
+      <div class="swap-ui">
+        <button class="flecha" id="swap-prev" aria-label="Carta anterior">←</button>
+        <p class="swap-cont mono m" id="swap-cont">1 / 4</p>
+        <button class="flecha" id="swap-next" aria-label="Carta siguiente">→</button>
+      </div>
     </div>
 
-    <div class="vitrina" id="vitrina"></div>
-    <div class="centrar"><button class="big-mas glass glow" id="mas">Mostrar más productos</button></div>
-    <div class="centrado" id="vacio" hidden>
-      <p class="d vacio-t" id="vacio-t">Sin resultados.</p>
-      <p class="vacio-n" id="vacio-n">Pruebe otra palabra o quite los filtros.</p>
-      <a id="vacio-wa" hidden href="https://wa.me/5356865093?text=Hola%2C%20%C2%BFcu%C3%A1ndo%20llega%20mercanc%C3%ADa%20nueva%3F" target="_blank" rel="noopener">Preguntar cuándo llega</a>
+    <div class="swap-cta">
+      <a class="cta cta-llena magnet" href="https://wa.me/5356865093?text=Hola%2C%20quiero%20saber%20c%C3%B3mo%20ser%20gestor%20o%20clipper%20con%20Nexo." target="_blank" rel="noopener">Quiero mi oportunidad <span aria-hidden="true">↗</span></a>
+      <p class="m">Desde el exterior, gestor, clipper o proveedor: escríbanos y hablamos hoy mismo.</p>
     </div>
-  </section>
+  </div>
+</section>
 
-  <section id="resenas" class="pad">
-    <div class="lbl"><b>02</b><i></i>Testimonios</div>
-    <h2 class="d">Lo que dicen <em>quienes compran.</em></h2>
-    <div class="carrusel glass">
-      <button class="flecha" id="prev" aria-label="Testimonio anterior">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-      </button>
-      <div class="riel-clip"><ul class="riel" id="riel"></ul></div>
-      <button class="flecha" id="next" aria-label="Testimonio siguiente">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-      </button>
+<!-- ============ CONTACTO ============ -->
+<section id="contacto" class="contacto">
+  <div class="pad">
+    <p class="lbl mono">[ 07 — Contacto ]</p>
+    <div class="contacto-grid">
+      <div class="contacto-cta">
+        <h2>¿Dudas antes<br>de comprar? <em>Hablamos.</em></h2>
+        <p>Agende una <strong>llamada gratuita</strong>: le llamamos, aclaramos todas sus dudas del producto, y luego usted decide si compra o no. Sin compromiso.</p>
+        <div class="contacto-ctas">
+          <a class="cta cta-llena magnet" href="https://wa.me/5356865093?text=Hola%2C%20quiero%20agendar%20una%20llamada%20gratuita%20antes%20de%20comprar." target="_blank" rel="noopener">Agendar llamada gratuita <span aria-hidden="true">↗</span></a>
+          <a class="cta cta-linea magnet" href="https://wa.me/5356865093?text=Hola%2C%20tengo%20una%20consulta%20sobre%20Nexo." target="_blank" rel="noopener">WhatsApp directo <span aria-hidden="true">↗</span></a>
+        </div>
+        <div id="interacciones" class="interacciones">
+          <p class="lbl mono">[ En vivo ]</p>
+          <p class="m"><span id="interacciones-n">…</span> interacciones de personas en esta página</p>
+        </div>
+      </div>
+      <div class="contacto-datos">
+        <div class="dato">
+          <p class="dato-k mono m">Dirección</p>
+          <p class="dato-v">Calle 30 #2004, entre 24 y 26, Miramar, Playa, La Habana</p>
+        </div>
+        <div class="dato">
+          <p class="dato-k mono m">Horario</p>
+          <p class="dato-v">Lunes a sábado: 9:00 – 18:00<br>Domingo: 9:00 – 13:00</p>
+        </div>
+        <div class="dato">
+          <p class="dato-k mono m">Entrega</p>
+          <p class="dato-v">Envío a domicilio en La Habana y coordinación para todo el país.</p>
+        </div>
+      </div>
     </div>
-    <p class="resena-cta">¿Quiere ser el próximo en dejar su testimonio? <a href="https://wa.me/5356865093?text=Hola%2C%20quiero%20dejar%20mi%20testimonio%20sobre%20mi%20compra." target="_blank" rel="noopener">Escríbanos por WhatsApp</a></p>
-  </section>
+  </div>
+</section>
 
-  <section id="contacto" class="pad">
-    <div class="lbl"><b>03</b><i></i>Contacto</div>
-    <h2 class="d">Pregunte <em>sin compromiso.</em></h2>
-    <p class="sec-nota">Escríbanos por WhatsApp: contesta una persona, no un robot. Le decimos el precio del envío antes de que confirme nada.</p>
-    <div class="centrar" style="margin-top:48px">
-      <a class="big" href="https://wa.me/5356865093?text=Hola%2C%20los%20vi%20en%20la%20p%C3%A1gina." target="_blank" rel="noopener">Escribir por WhatsApp <span aria-hidden="true">↗</span></a>
-    </div>
-  </section>
+<!-- ============ CIERRE ============ -->
+<section class="cierre">
+  <canvas id="nexo-word" aria-label="Nexo" role="img"></canvas>
+  <div class="cierre-txt">
+    <p class="m">Gracias por visitar Nexo. Nos vemos en el chat.</p>
+    <a class="cta cta-linea magnet" href="https://wa.me/5356865093?text=Hola%2C%20los%20vi%20en%20la%20p%C3%A1gina." target="_blank" rel="noopener">Empezar ahora <span aria-hidden="true">↗</span></a>
+  </div>
+</section>
+
 </main>
 
 <footer>
-  <span>Nexox · Catálogo</span>
-  <span class="f-cats" id="f-cats"></span>
+  <div class="pie">
+    <div class="pie-col pie-marca">
+      <a href="#inicio" class="logo"><i></i>Nexo</a>
+      <p class="m">Productos para el hogar, la energía y la movilidad en Cuba. Foto real, precio claro y entrega a domicilio.</p>
+    </div>
+    <nav class="pie-col" aria-label="Categorías">
+      <p class="pie-t mono m">Catálogo</p>
+      <div id="f-cats" class="f-cats"></div>
+    </nav>
+    <div class="pie-col">
+      <p class="pie-t mono m">Contacto</p>
+      <a href="https://wa.me/5356865093" target="_blank" rel="noopener">WhatsApp: +53 5686 5093</a>
+      <p class="m">Calle 30 #2004, Miramar, Playa<br>La Habana, Cuba</p>
+      <p class="m">L–S 9:00–18:00 · D 9:00–13:00</p>
+    </div>
+  </div>
+  <p class="pie-final m">Nexo © 2026 — Hecho en La Habana</p>
 </footer>
 
 <!-- botones flotantes -->
-<button id="subir" class="flotante glass" aria-label="Volver al catálogo" hidden>
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5m0 0-6 6m6-6 6 6"/></svg>
-</button>
-<button id="carro-btn" class="flotante glass" aria-label="Abrir carrito">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 7h16l-1.5 9.5a2 2 0 0 1-2 1.5H8.2a2 2 0 0 1-2-1.6L4 3H1"/><circle cx="9" cy="21" r="1.6"/><circle cx="18" cy="21" r="1.6"/></svg>
-  <span id="carro-n" class="carro-n" hidden></span>
-</button>
-<a id="wa-flotante" href="https://wa.me/5356865093?text=Hola%2C%20los%20vi%20en%20la%20p%C3%A1gina." target="_blank" rel="noopener" aria-label="Escribir por WhatsApp">
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-3-.2-.3a8.2 8.2 0 1 1 6.9 3.8Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4 0-.5.1-.6l.4-.5c.1-.1.2-.3.3-.4.1-.2 0-.3 0-.5L9 6.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 1.9 3 4.6 4.2.6.3 1.2.4 1.6.6.6.2 1.2.2 1.6.1.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2l-.4-.3Z"/></svg>
-</a>
+<div class="dock">
+  <button id="subir" class="dock-btn" aria-label="Volver al catálogo" hidden>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5m0 0-6 6m6-6 6 6"/></svg>
+  </button>
+  <button id="carro-btn" class="dock-btn" aria-label="Abrir carrito">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 7h16l-1.5 9.5a2 2 0 0 1-2 1.5H8.2a2 2 0 0 1-2-1.6L4 3H1"/><circle cx="9" cy="21" r="1.6"/><circle cx="18" cy="21" r="1.6"/></svg>
+    <span id="carro-n" class="carro-n" hidden></span>
+  </button>
+  <a id="wa-flotante" class="dock-btn dock-wa" href="https://wa.me/5356865093?text=Hola%2C%20los%20vi%20en%20la%20p%C3%A1gina." target="_blank" rel="noopener" aria-label="Escribir por WhatsApp">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-3-.2-.3a8.2 8.2 0 1 1 6.9 3.8Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4 0-.5.1-.6l.4-.5c.1-.1.2-.3.3-.4.1-.2 0-.3 0-.5L9 6.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 1.9 3 4.6 4.2.6.3 1.2.4 1.6.6.6.2 1.2.2 1.6.1.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2l-.4-.3Z"/></svg>
+  </a>
+</div>
 
 <!-- carrito -->
 <div id="carro-fondo" hidden></div>
@@ -145,7 +468,12 @@
   <p id="carro-vacio" class="carro-vacio-t">Su carrito está vacío.<br><span>Añada productos desde el catálogo.</span></p>
   <div class="carro-pie" id="carro-pie">
     <div class="carro-total"><span class="m">Total</span><strong id="carro-total">$0</strong></div>
+    <div class="carro-envio" id="carro-envio" hidden>
+      <div><span class="m">Entrega estimada</span><strong id="carro-envio-precio">—</strong></div>
+      <p id="carro-envio-lugar" class="m"></p>
+    </div>
     <a class="big" id="carro-wa" href="#" target="_blank" rel="noopener">Pedir por WhatsApp <span aria-hidden="true">↗</span></a>
+    <a class="btn-linea carro-llamada" id="carro-llamada" href="https://wa.me/5356865093?text=Hola%2C%20quiero%20agendar%20una%20llamada%20gratuita%20de%2010%20minutos%20sobre%20mi%20pedido%20de%20Nexo." target="_blank" rel="noopener">Agendar llamada gratuita de 10 minutos</a>
     <p class="m carro-nota">Enviamos la lista completa por WhatsApp y confirmamos disponibilidad y envío.</p>
   </div>
 </aside>
@@ -153,469 +481,44 @@
 <dialog id="modal">
   <button class="cerrar" id="cerrar" aria-label="Cerrar">✕</button>
   <div class="modal-grid">
-    <div class="modal-foto glass glow"><img id="m-img" alt="" loading="lazy" decoding="async"></div>
+    <div class="modal-foto">
+      <img id="m-img" alt="" loading="lazy" decoding="async">
+      <video id="m-video" controls playsinline preload="metadata" hidden></video>
+      <div class="m-galeria" id="m-galeria" hidden></div>
+    </div>
     <div class="modal-datos">
       <p class="m m-cat"><span id="m-cat"></span> <span class="estado" id="m-estado"></span></p>
       <h3 class="d" id="m-nombre"></h3>
       <p class="precio-grande" id="m-precio"></p>
       <p class="m-desc-c" id="m-desc-c"></p>
       <p class="m-desc-l" id="m-desc-l"></p>
-      <div class="m-venta glass">
+      <div class="m-venta">
         <p class="m-venta-t m">Lo que este producto hace por usted</p>
         <p id="m-venta"></p>
       </div>
       <dl class="especificaciones" id="m-specs"></dl>
+      <div class="producto-nav" aria-label="Navegar entre productos">
+        <button type="button" id="m-prev" class="producto-nav-btn" aria-label="Producto anterior">← <span>Anterior</span></button>
+        <span id="m-pos" class="m producto-nav-pos"></span>
+        <button type="button" id="m-next" class="producto-nav-btn" aria-label="Producto siguiente"><span>Siguiente</span> →</button>
+      </div>
       <div class="modal-acciones">
         <button class="big" id="m-add">Añadir al carrito</button>
         <a class="btn-linea" id="m-wa" href="#" target="_blank" rel="noopener">Preguntar por WhatsApp</a>
+        <a class="btn-linea producto-llamada" id="m-llamada" href="#" target="_blank" rel="noopener">Agendar llamada gratuita de 10 minutos</a>
       </div>
-      <p class="m-nota">Si está agotado, escriba igual: le avisamos apenas vuelva a entrar.</p>
+      <p class="m-nota">¿Dudas? Agende una <strong>llamada gratuita</strong> antes de comprar y se lo explicamos todo. Si está agotado, escriba igual: le avisamos apenas vuelva a entrar.</p>
     </div>
   </div>
+  <section class="modal-sugerencias" id="m-sugerencias" aria-labelledby="m-sugerencias-titulo" hidden>
+    <h3 id="m-sugerencias-titulo">También podría interesarte</h3>
+    <div class="sug-grid" id="m-sug-grid"></div>
+  </section>
 </dialog>
 
-<script src="catalogo.js?v=nexox1" defer></script>
-<script src="app.js?v=nexox1" defer></script>
-<script data-pplx-inline-edit>
-(function () {
-  if (window === window.top) return;
-
-  const allowedParentOrigins = ["https://www.perplexity.ai","https://perplexity.ai","https://testing.perplexity.ai","https://staging.perplexity.ai","https://*.preview.i.perplexity.ai","http://perplexity.localhost","http://localhost:1420","http://127.0.0.1:1420","http://localhost:3000","http://127.0.0.1:3000","http://localhost:5173","http://127.0.0.1:5173"];
-  const MAX_FONT_BYTES = 500 * 1024;
-  const MAX_TOTAL_FONT_BYTES = 2 * 1024 * 1024;
-  const DEFAULT_LINE_HEIGHT = 16;
-  let scrollForwarding = false;
-  let scrollRaf = 0;
-  let trustedTopOrigin = null;
-
-  // Allow entries like "https://*.preview.i.perplexity.ai" — the wildcard
-  // matches a single DNS label (no dots), so "https://*.foo" cannot stretch
-  // across multiple labels.
-  function matchesAllowedOrigin(origin) {
-    if (!origin) return false;
-    for (const entry of allowedParentOrigins) {
-      if (!entry.includes("*")) {
-        if (entry === origin) return true;
-        continue;
-      }
-      const pattern = new RegExp(
-        "^" +
-          entry.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^.]+") +
-          "$",
-      );
-      if (pattern.test(origin)) return true;
-    }
-    return false;
-  }
-
-  // Trust decision: when the sender is same-origin-visible (event.origin is a
-  // real origin like https://www.perplexity.ai) we trust event.origin directly.
-  // When event.origin is "null" (opaque broker srcdoc), we fall back to the
-  // broker's stamped `parentOrigin` to identify the top window. The fallback
-  // is claim-only — we rely on the browser's native `targetOrigin` enforcement
-  // on the response path (see postToTrustedTop) to ensure replies can't be
-  // delivered to anyone but the actual top window of that claimed origin.
-  function getTrustedParentOrigin(event) {
-    const forwardedParentOrigin =
-      typeof event.data.parentOrigin === "string" ? event.data.parentOrigin : null;
-    const parentOrigin = event.origin === "null" ? forwardedParentOrigin : event.origin;
-    return matchesAllowedOrigin(parentOrigin) ? parentOrigin : null;
-  }
-
-  // All responses go to window.top with targetOrigin = the allowlisted origin.
-  // An attacker that iframes us inside their own null-origin broker can claim
-  // any parentOrigin they like, but the browser will drop the reply whenever
-  // the real top's origin doesn't match — so the screenshot never leaves.
-  function postToTrustedTop(message) {
-    if (!trustedTopOrigin) return;
-    try {
-      window.top.postMessage(message, trustedTopOrigin);
-    } catch (_error) {}
-  }
-
-  const PICK_CAPABILITIES = ["pick"];
-  const PICK_CHAIN_LENGTH = 4;
-  const PICK_MAX_TEXT_CHARS = 120;
-  const PICK_MAX_HTML_CHARS = 300;
-
-  function truncate(value, maxChars) {
-    return value.length > maxChars ? value.slice(0, maxChars - 1) + "…" : value;
-  }
-
-  function isPickableElement(element) {
-    return (
-      element instanceof Element &&
-      element !== document.documentElement &&
-      element !== document.body
-    );
-  }
-
-  function resolvePickTarget(x, y) {
-    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
-    const element = document.elementFromPoint(x, y);
-    return isPickableElement(element) ? element.closest("svg") || element : null;
-  }
-
-  function pickLabel(element) {
-    if (element.id) return element.localName + "#" + element.id;
-    return [element.localName].concat(Array.from(element.classList).slice(0, 2)).join(".");
-  }
-
-  // Only attributes that help find the element in source. data-* values and URL
-  // query strings or fragments can carry tokens.
-  const PICK_ATTRIBUTES = new Set([
-    "id",
-    "class",
-    "name",
-    "type",
-    "role",
-    "alt",
-    "aria-label",
-    "href",
-    "src",
-  ]);
-
-  function pickAttributeValue(attribute) {
-    return attribute.name === "href" || attribute.name === "src"
-      ? attribute.value.split(/[?#]/)[0]
-      : attribute.value;
-  }
-
-  function describePickElement(element) {
-    const chain = [];
-    for (
-      let current = element;
-      isPickableElement(current) && chain.length < PICK_CHAIN_LENGTH;
-      current = current.parentElement
-    ) {
-      chain.unshift(current);
-    }
-    const attributes = Array.from(element.attributes)
-      .filter((attribute) => PICK_ATTRIBUTES.has(attribute.name))
-      .map((attribute) => ` ${attribute.name}="${pickAttributeValue(attribute).replace(/"/g, """)}"`)
-      .join("");
-    const text = (element.innerText || element.textContent || "").replace(/\s+/g, " ").trim();
-    return {
-      chain: chain.map(pickLabel),
-      html: truncate(`<${element.localName}${attributes}>`, PICK_MAX_HTML_CHARS),
-      text: text ? truncate(text, PICK_MAX_TEXT_CHARS) : undefined,
-    };
-  }
-
-  // Hover asks once per frame, and innerText on a large section forces layout,
-  // so only the rect is re-read while the pointer stays on the same element.
-  // Clicks ask for fresh details since the page may have changed the element.
-  let lastPick = null;
-
-  function describePickTarget(element, fresh) {
-    if (fresh || lastPick?.element !== element) {
-      lastPick = { element, details: describePickElement(element) };
-    }
-    const rect = element.getBoundingClientRect();
-    return {
-      rect: { x: rect.left, y: rect.top, width: rect.width, height: rect.height },
-      ...lastPick.details,
-    };
-  }
-
-  function inlineAll(original, clone) {
-    if (original.nodeType !== 1 || clone.nodeType !== 1) return;
-
-    try {
-      const computedStyle = getComputedStyle(original);
-      // cssText on a computed style is the serialized declaration in modern
-      // Chromium/Safari — a single read beats enumerating ~400 longhand
-      // properties. Firefox returns "" here, so we fall back on empty.
-      const serialized = computedStyle.cssText;
-      if (serialized) {
-        clone.style.cssText = serialized;
-      } else {
-        const parts = new Array(computedStyle.length);
-        for (let index = 0; index < computedStyle.length; index += 1) {
-          const property = computedStyle[index];
-          parts[index] = `${property}:${computedStyle.getPropertyValue(property)};`;
-        }
-        clone.style.cssText = parts.join("");
-      }
-    } catch (_error) {}
-
-    const originalChildren = original.children;
-    const clonedChildren = clone.children;
-    for (
-      let index = 0;
-      index < originalChildren.length && index < clonedChildren.length;
-      index += 1
-    ) {
-      inlineAll(originalChildren[index], clonedChildren[index]);
-    }
-  }
-
-  function extractFontUrl(srcValue) {
-    const matches = [
-      ...srcValue.matchAll(
-        /url\(["']?([^"')]+)["']?\)(?:\s*format\(["']?([^"')]+)["']?\))?/gi,
-      ),
-    ];
-    if (matches.length === 0) return null;
-    const woff2 = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff2"));
-    if (woff2) return woff2[1];
-    const woff = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff"));
-    if (woff) return woff[1];
-    return matches[0][1];
-  }
-
-  // Cache resolved font URL -> data URI across captures. Fonts on a page
-  // essentially never change, and a batch run emits multiple captures back to
-  // back — without this we'd refetch + re-base64 every time.
-  const fontDataUriCache = new Map();
-  const SRC_DECLARATION_RE = /src\s*:\s*[^;}]+/i;
-
-  async function fetchAsDataUri(url) {
-    if (fontDataUriCache.has(url)) return fontDataUriCache.get(url);
-    let dataUri = null;
-    try {
-      const response = await fetch(url, { mode: "cors", credentials: "omit" });
-      if (response.ok) {
-        const blob = await response.blob();
-        if (blob.size <= MAX_FONT_BYTES) {
-          dataUri = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () =>
-              resolve(typeof reader.result === "string" ? reader.result : null);
-            reader.onerror = () => resolve(null);
-            reader.readAsDataURL(blob);
-          });
-        }
-      }
-    } catch (_error) {
-      dataUri = null;
-    }
-    fontDataUriCache.set(url, dataUri);
-    return dataUri;
-  }
-
-  function collectFontFaceRuleTexts() {
-    const rules = [];
-    for (const sheet of document.styleSheets) {
-      let cssRules;
-      try {
-        cssRules = sheet.cssRules;
-      } catch (_error) {
-        continue;
-      }
-      if (!cssRules) continue;
-      for (const rule of cssRules) {
-        const cssText = rule.cssText || "";
-        if (cssText.startsWith("@font-face")) rules.push(cssText);
-      }
-    }
-    return rules;
-  }
-
-  async function buildInlinedFontCss() {
-    const ruleTexts = collectFontFaceRuleTexts();
-    if (ruleTexts.length === 0) return null;
-
-    const resolved = ruleTexts.map((cssText) => {
-      if (!SRC_DECLARATION_RE.test(cssText)) return null;
-      const srcMatch = cssText.match(/src\s*:\s*([^;}]+)[;}]/i);
-      if (!srcMatch) return null;
-      const url = extractFontUrl(srcMatch[1]);
-      if (!url) return null;
-      try {
-        return { cssText, url: new URL(url, document.baseURI).href };
-      } catch (_error) {
-        return null;
-      }
-    });
-
-    const dataUris = await Promise.all(
-      resolved.map((entry) => (entry ? fetchAsDataUri(entry.url) : Promise.resolve(null))),
-    );
-
-    const inlined = [];
-    let totalBytes = 0;
-    for (let index = 0; index < resolved.length; index += 1) {
-      const entry = resolved[index];
-      const dataUri = dataUris[index];
-      if (!entry || !dataUri) continue;
-      const approxBytes = dataUri.length * 0.75;
-      if (totalBytes + approxBytes > MAX_TOTAL_FONT_BYTES) break;
-      totalBytes += approxBytes;
-      inlined.push(entry.cssText.replace(SRC_DECLARATION_RE, `src: url("${dataUri}")`));
-    }
-    return inlined.length > 0 ? inlined.join("\n") : null;
-  }
-
-  function stripExternal(clone) {
-    const images = clone.querySelectorAll("img");
-    for (let index = 0; index < images.length; index += 1) {
-      const src = images[index].getAttribute("src");
-      if (src && !src.startsWith("data:")) images[index].removeAttribute("src");
-    }
-
-    const elements = clone.querySelectorAll("*");
-    for (let index = 0; index < elements.length; index += 1) {
-      const style = elements[index].style.cssText;
-      if (style && style.includes("url(")) {
-        elements[index].style.cssText = style.replace(
-          /url\(["']?(?!data:)[^)"']*["']?\)/gi,
-          "none",
-        );
-      }
-    }
-  }
-
-  function emitScroll() {
-    scrollRaf = 0;
-    if (!scrollForwarding) return;
-    postToTrustedTop({
-      type: "INLINE_EDIT_SCROLL",
-      scrollX: window.scrollX,
-      scrollY: window.scrollY,
-      capabilities: PICK_CAPABILITIES,
-    });
-  }
-
-  window.addEventListener(
-    "scroll",
-    function () {
-      if (!scrollForwarding || scrollRaf) return;
-      scrollRaf = requestAnimationFrame(emitScroll);
-    },
-    { passive: true, capture: true },
-  );
-
-  async function handleCaptureRequest(event) {
-    const requestId = event.data.requestId;
-    const scrollX = window.scrollX;
-    const scrollY = window.scrollY;
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-
-    function postResult(dataUrl) {
-      postToTrustedTop({
-        type: "INLINE_EDIT_SCREENSHOT_RESULT",
-        requestId,
-        dataUrl,
-        scrollX,
-        scrollY,
-      });
-    }
-
-    try {
-      // Wait for any pending web fonts to resolve so both inline metrics and
-      // the @font-face inlining below see the same loaded faces.
-      if (document.fonts && document.fonts.ready) {
-        try {
-          await document.fonts.ready;
-        } catch (_error) {}
-      }
-
-      const clone = document.documentElement.cloneNode(true);
-      inlineAll(document.documentElement, clone);
-
-      const removedNodes = clone.querySelectorAll("script,link[rel=\"stylesheet\"],style");
-      for (let index = 0; index < removedNodes.length; index += 1) {
-        removedNodes[index].remove();
-      }
-
-      stripExternal(clone);
-
-      // Re-embed web fonts as data-URI @font-face rules so the SVG rasterizer
-      // can resolve them — external font URLs aren't fetched during
-      // foreignObject rendering, which would otherwise force a fallback face
-      // and change text metrics.
-      const inlinedFontCss = await buildInlinedFontCss();
-      if (inlinedFontCss) {
-        const styleEl = document.createElement("style");
-        styleEl.textContent = inlinedFontCss;
-        const head = clone.querySelector("head");
-        if (head) head.appendChild(styleEl);
-        else clone.insertBefore(styleEl, clone.firstChild);
-      }
-
-      const html = new XMLSerializer().serializeToString(clone);
-      const svg =
-        `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
-        '<foreignObject width="100%" height="100%">' +
-        `<div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;overflow:hidden">` +
-        `<div style="position:relative;left:-${scrollX}px;top:-${scrollY}px">` +
-        html +
-        "</div></div></foreignObject></svg>";
-      const svgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-      const image = new Image();
-      image.onload = function () {
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext("2d").drawImage(image, 0, 0);
-        postResult(canvas.toDataURL("image/png"));
-      };
-      image.onerror = function () {
-        postResult(null);
-      };
-      image.src = svgUrl;
-    } catch (_error) {
-      postResult(null);
-    }
-  }
-
-  window.addEventListener("message", function (event) {
-    if (!event.data) return;
-    // Only accept messages from the direct parent frame. Blocks sibling /
-    // unrelated-window postMessage senders that could otherwise reach us.
-    if (event.source !== window.parent) return;
-
-    const trustedParentOrigin = getTrustedParentOrigin(event);
-    if (!trustedParentOrigin) return;
-    trustedTopOrigin = trustedParentOrigin;
-
-    if (event.data.type === "INLINE_EDIT_PICK") {
-      const element = resolvePickTarget(event.data.x, event.data.y);
-      postToTrustedTop({
-        type: "INLINE_EDIT_PICK_RESULT",
-        seq: event.data.seq,
-        target: element ? describePickTarget(element, event.data.fresh === true) : null,
-      });
-      return;
-    }
-
-    if (event.data.type === "INLINE_EDIT_SCROLL_START") {
-      scrollForwarding = true;
-      emitScroll();
-      return;
-    }
-
-    if (event.data.type === "INLINE_EDIT_SCROLL_STOP") {
-      scrollForwarding = false;
-      if (scrollRaf) cancelAnimationFrame(scrollRaf);
-      scrollRaf = 0;
-      return;
-    }
-
-    if (event.data.type === "INLINE_EDIT_SCROLL_BY") {
-      const { deltaX, deltaY, deltaMode } = event.data;
-      if (!scrollForwarding || !Number.isFinite(deltaX) || !Number.isFinite(deltaY)) return;
-      if (deltaMode !== 0 && deltaMode !== 1 && deltaMode !== 2) return;
-      const lineHeight =
-        parseFloat(getComputedStyle(document.documentElement).lineHeight) || DEFAULT_LINE_HEIGHT;
-      const scaleX = deltaMode === 1 ? lineHeight : deltaMode === 2 ? window.innerWidth : 1;
-      const scaleY = deltaMode === 1 ? lineHeight : deltaMode === 2 ? window.innerHeight : 1;
-      // The selection overlay receives the wheel event instead of this iframe.
-      // Instant scrolling preserves trackpad deltas even on smooth-scroll sites.
-      window.scrollBy({ left: deltaX * scaleX, top: deltaY * scaleY, behavior: "instant" });
-      emitScroll();
-      return;
-    }
-
-    if (event.data.type !== "INLINE_EDIT_CAPTURE_REQUEST") return;
-
-    handleCaptureRequest(event);
-  });
-})();
-
-
-</script><script src="esfera.js?v=3" defer></script>
+<script src="catalogo.js?v=ar1" defer></script>
+<script src="esfera.js?v=6" defer></script>
+<script src="micro.js?v=7" defer></script>
+<script src="app.js?v=sug1" defer></script>
 </body>
 </html>

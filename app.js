@@ -1,10 +1,85 @@
-/* Nexox — lógica del catálogo */
+/* Nexo — lógica del catálogo */
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const WA="5356865093";
 const TOTAL=CATALOGO.length;
 const fmt=c=>(c/100).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2})+" USD";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>"&#"+c.charCodeAt(0)+";");
+const norm=s=>String(s??"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+const LS=(()=>{try{return window["local"+"Storage"]}catch(e){return null}})();
+
+/* ---------- entrega: estimación pública, confirmación humana ---------- */
+const ENVIO_ZONAS={
+  "habana-vieja":{n:"La Habana Vieja",c:0,t:"La entrega va por la casa dentro del radio cercano; confirme la dirección exacta."},
+  "centro-habana":{n:"Centro Habana",c:0,t:"La entrega va por la casa dentro del radio cercano; confirme la dirección exacta."},
+  "plaza":{n:"Plaza de la Revolución",c:0,t:"La entrega va por la casa dentro del radio cercano; confirme la dirección exacta."},
+  "vedado":{n:"Vedado",c:0,t:"La entrega va por la casa dentro del radio cercano; confirme la dirección exacta."},
+  "cerro":{n:"Cerro",c:0,t:"La entrega va por la casa; confirme la dirección exacta por WhatsApp."},
+  "diez-de-octubre":{n:"Diez de Octubre",c:0,t:"La entrega va por la casa; confirme la dirección exacta por WhatsApp."},
+  "playa":{n:"Playa",c:0,t:"La entrega va por la casa dentro del radio cercano; confirme la dirección exacta."},
+  "marianao":{n:"Marianao",c:0,t:"La entrega va por la casa; confirme la dirección exacta por WhatsApp."},
+  "la-lisa":{n:"La Lisa",c:0,t:"La entrega va por la casa; confirme la dirección exacta por WhatsApp."},
+  "regla":{n:"Regla",c:0,t:"La entrega va por la casa; confirme la dirección exacta por WhatsApp."},
+  "habana-del-este":{n:"La Habana del Este",c:491,t:"Estimado por zona; se confirma por WhatsApp."},
+  "guanabacoa":{n:"Guanabacoa",c:0,t:"La entrega va por la casa; confirme la dirección exacta por WhatsApp."},
+  "san-miguel":{n:"San Miguel del Padrón",c:0,t:"La entrega va por la casa; confirme la dirección exacta por WhatsApp."},
+  "arroyo-naranjo":{n:"Arroyo Naranjo",c:0,t:"La entrega va por la casa; confirme la dirección exacta por WhatsApp."},
+  "boyeros":{n:"Boyeros",c:940,t:"Estimado por zona; se confirma por WhatsApp."},
+  "cotorro":{n:"Cotorro",c:915,t:"Estimado por zona; se confirma por WhatsApp."},
+  "guanabo":{n:"Guanabo",c:1397,t:"Estimado por zona; se confirma por WhatsApp."},
+  "boca-ciega":{n:"Boca Ciega",c:1309,t:"Estimado por zona; se confirma por WhatsApp."},
+  "campo-florido":{n:"Campo Florido",c:1475,t:"Estimado por zona; se confirma por WhatsApp."},
+  "tarara":{n:"Tarará",c:1020,t:"Estimado por zona; se confirma por WhatsApp."},
+  "bauta":{n:"Bauta",c:3500,t:"Tarifa pública por zona; confirme dirección y coordinación por WhatsApp."},
+  "artemisa":{n:"Artemisa",c:7500,t:"Tarifa pública por zona; confirme dirección y coordinación por WhatsApp."},
+  "san-jose":{n:"San José de las Lajas",c:4000,t:"Tarifa pública por zona; confirme dirección y coordinación por WhatsApp."},
+  "otra":{n:"Otro municipio",c:0,t:"La entrega va por la casa; confirme la dirección exacta por WhatsApp."}
+};
+let envio={};
+try{envio=LS?JSON.parse(LS.getItem("nexo-envio")||"{}")||{}:{}}catch(e){}
+function guardarEnvio(){try{LS&&LS.setItem("nexo-envio",JSON.stringify(envio))}catch(e){}}
+function calcularEnvio(id){return ENVIO_ZONAS[id]||null}
+function textoEnvio(e){return !e?"A confirmar":e.c===0||e.c===null?"Va por la casa":fmt(e.c)}
+function pintarEnvio(){
+  const sel=$("#envio-zona"), resultado=$("#envio-resultado"), lugar=$("#envio-lugar"), precio=$("#envio-precio"), letra=$("#envio-letra");
+  if(!sel||!resultado)return;
+  sel.value=envio.id||"";
+  const e=calcularEnvio(envio.id);
+  if(!e){resultado.hidden=true;return}
+  resultado.hidden=false;lugar.textContent=e.n;precio.textContent=textoEnvio(e);letra.textContent=e.t;
+  resultado.classList.toggle("is-consulta",e.c===null);resultado.classList.toggle("is-gratis",e.c===0);
+  pintarCarro();
+}
+$("#envio-calcular")?.addEventListener("click",()=>{
+  const id=$("#envio-zona").value;
+  if(!id){$("#envio-resultado").hidden=true;$("#envio-zona").focus();return}
+  envio={id};guardarEnvio();pintarEnvio();
+});
+$("#envio-zona")?.addEventListener("change",()=>{if(!$("#envio-zona").value){envio={};guardarEnvio();pintarEnvio()}});
+
+/* ---------- camión de mensajería en bucle ---------- */
+(()=>{
+  const ruta=$(".envio-ruta"), camion=$(".envio-camion");
+  if(!ruta||!camion||reduce)return;
+  const duracion=7200, puntos=[.16,.38,.60,.82];
+  let inicio=performance.now(), ultimo=0, soltados=new Set(), cajas=[];
+  function recorrer(ahora){
+    const progreso=((ahora-inicio)%duracion)/duracion;
+    if(progreso<ultimo){cajas.forEach(c=>c.remove());cajas=[];soltados.clear()}
+    camion.style.transform=`translateX(${Math.max(0,ruta.clientWidth-64)*progreso}px)`;
+    puntos.forEach((p,i)=>{
+      if(progreso>=p&&!soltados.has(i)){
+        const caja=document.createElement("span");
+        caja.className="envio-paquete";
+        caja.style.left=`calc(${p*100}% - 16px)`;
+        ruta.append(caja); cajas.push(caja); soltados.add(i);
+      }
+    });
+    ultimo=progreso;
+    requestAnimationFrame(recorrer);
+  }
+  requestAnimationFrame(recorrer);
+})();
 
 /* grupos: g -> {nombre, subs:[nombres]} */
 const GRUPO_NOMBRE={...Object.fromEntries(Object.entries(GRUPOS).map(([g,d])=>[g,d.nombre]))};
@@ -14,17 +89,21 @@ const SUBS_TODOS=Object.values(GRUPOS).flatMap(d=>d.subs);
 let g="", sub="", q="", orden="rel", visibles=36;
 const porId=Object.fromEntries(CATALOGO.map(p=>[p.s,p]));
 let lista=[...CATALOGO];
+const productReveal=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){e.target.classList.add("in");productReveal.unobserve(e.target)}
+}),{rootMargin:"0px 0px -8% 0px",threshold:.08});
 
 /* ---------- carrito ---------- */
-const LS=(()=>{try{return window["local"+"Storage"]}catch(e){return null}})();
 let carro={};
-try{carro=LS?JSON.parse(LS.getItem("nexox-carro")||"{}")||{}:{}}catch(e){}
-const guardarCarro=()=>{try{LS&&LS.setItem("nexox-carro",JSON.stringify(carro))}catch(e){}};
+try{carro=LS?JSON.parse(LS.getItem("nexo-carro")||"{}")||{}:{}}catch(e){}
+const guardarCarro=()=>{try{LS&&LS.setItem("nexo-carro",JSON.stringify(carro))}catch(e){}};
+for(const id of Object.keys(carro))if(!porId[id]||porId[id].e==="agotado")delete carro[id];
+guardarCarro();
 const nCarro=()=>Object.values(carro).reduce((a,b)=>a+b,0);
 function pintarCarroN(){const n=nCarro(),el=$("#carro-n");el.hidden=!n;el.textContent=n}
-function addCarro(id){carro[id]=(carro[id]||0)+1;guardarCarro();pintarCarroN();pintarCarro()}
-function delCarro(id){delete carro[id];guardarCarro();pintarCarroN();pintarCarro()}
-function setCarro(id,cant){if(cant<=0)delCarro(id);else{carro[id]=cant;guardarCarro();pintarCarroN();pintarCarro()}}
+function addCarro(id){const p=porId[id];if(!p||p.e==="agotado")return false;carro[id]=(carro[id]||0)+1;guardarCarro();pintarCarroN();pintarCarro();pintarSugerencias(id);return true}
+function delCarro(id){delete carro[id];guardarCarro();pintarCarroN();pintarCarro();if(!nCarro()){const z=$("#sugerencias");if(z)z.hidden=true}}
+function setCarro(id,cant){const p=porId[id];if(!p||p.e==="agotado"&&cant>(carro[id]||0))return;if(cant<=0)delCarro(id);else{carro[id]=cant;guardarCarro();pintarCarroN();pintarCarro()}}
 function totalCarro(){return Object.keys(carro).reduce((a,id)=>{const p=porId[id];return p?a+carro[id]*p.pv:0},0)}
 function pintarCarro(){
   const ul=$("#carro-lista"), ids=Object.keys(carro).filter(id=>porId[id]);
@@ -46,10 +125,67 @@ function pintarCarro(){
     </li>`}).join("");
   const tot=totalCarro();
   $("#carro-total").textContent=fmt(tot);
+  const e=calcularEnvio(envio.id), envioBox=$("#carro-envio"), envioPrecio=$("#carro-envio-precio"), envioLugar=$("#carro-envio-lugar");
+  if(envioBox){envioBox.hidden=!e; if(e){envioPrecio.textContent=textoEnvio(e);envioLugar.textContent=`${e.n} · ${e.c===null||e.c===0?"entrega va por la casa":"estimación orientativa"}`}}
   const lineas=ids.map(id=>{const p=porId[id];return `• ${carro[id]} × ${p.n} — ${fmt(carro[id]*p.pv)}`});
-  const msg=`Hola, quiero hacer un pedido:\n${lineas.join("\n")}\nTotal: ${fmt(tot)}`;
+  const envioLinea=e?`\nEntrega a ${e.n}: ${textoEnvio(e)}\n${e.c===null||e.c===0?"La entrega va por la casa; confirme la dirección exacta.":"Confirme la dirección y el precio final de la entrega."}`:"\nEntrega: se confirma por WhatsApp";
+  const msg=`Hola, quiero hacer un pedido en Nexo:\n${lineas.join("\n")}\nSubtotal: ${fmt(tot)}${envioLinea}\n¿Me confirman existencia y total final antes de cerrar el pedido?`;
   $("#carro-wa").href=`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`;
 }
+/* sugerencias tras añadir al carrito */
+function pintarSugerencias(ultimoId){
+  const zona=$("#sugerencias"); if(!zona)return;
+  const ids=Object.keys(carro).filter(id=>porId[id]);
+  if(!ids.length){zona.hidden=true;return}
+  const base=porId[ultimoId]&&porId[ultimoId].s===ultimoId?porId[ultimoId]:porId[ids[0]];
+  const enCarro=new Set(ids);
+  const pool=CATALOGO.filter(p=>p.s!==base.s&&p.e!=="agotado"&&!enCarro.has(p.s));
+  const mismoSub=pool.filter(p=>p.c===base.c&&p.g===base.g);
+  const mismoGrupo=pool.filter(p=>p.g===base.g&&p.c!==base.c);
+  const resto=pool.filter(p=>p.g!==base.g);
+  const elegidos=[];
+  for(const arr of [mismoSub,mismoGrupo,resto]){
+    for(const p of arr){if(elegidos.length<4&&!elegidos.includes(p))elegidos.push(p)}
+    if(elegidos.length>=4)break;
+  }
+  if(!elegidos.length){zona.hidden=true;return}
+  $("#sug-grid").innerHTML=elegidos.map(p=>{
+    const foto=(p.fs&&p.fs[0])||p.f||p.s+".webp";
+    return `<button class="sug-card" data-sug="${p.s}">
+      <img src="fotos/${foto}" alt="${esc(p.n)}" loading="lazy" decoding="async">
+      <span class="sug-nombre">${esc(p.n)}</span>
+      <span class="sug-precio mono">${fmt(p.pv)}</span>
+    </button>`}).join("");
+  zona.hidden=false;
+}
+function pintarSugerenciasProducto(id){
+  const seccion=$("#m-sugerencias"), grid=$("#m-sug-grid"), base=porId[id];
+  if(!seccion||!grid||!base){if(seccion)seccion.hidden=true;return}
+  const disponibles=CATALOGO.filter(p=>p.s!==id&&p.e!=="agotado");
+  const grupos=[
+    disponibles.filter(p=>p.g===base.g&&p.c===base.c),
+    disponibles.filter(p=>p.g===base.g&&p.c!==base.c),
+    disponibles.filter(p=>p.g!==base.g)
+  ];
+  const elegidos=[];
+  for(const grupo of grupos){for(const p of grupo){if(elegidos.length<4&&!elegidos.some(x=>x.s===p.s))elegidos.push(p)}if(elegidos.length===4)break}
+  if(!elegidos.length){seccion.hidden=true;grid.innerHTML="";return}
+  grid.innerHTML=elegidos.map(p=>{
+    const foto=(p.fs&&p.fs[0])||p.f||p.s+".webp";
+    return `<button class="sug-card" type="button" data-product-sug="${esc(p.s)}">
+      <img src="fotos/${esc(foto)}" alt="" loading="lazy" decoding="async">
+      <span class="sug-nombre">${esc(p.n)}</span>
+      <span class="sug-precio mono">${fmt(p.pv)}</span>
+    </button>`
+  }).join("");
+  seccion.hidden=false;
+}
+$("#sug-grid")?.addEventListener("click",e=>{
+  const c=e.target.closest("[data-sug]"); if(c)abrir(c.dataset.sug);
+});
+$("#m-sug-grid")?.addEventListener("click",e=>{
+  const c=e.target.closest("[data-product-sug]");if(c)abrir(c.dataset.productSug);
+});
 const carroEl=$("#carro"), carroFondo=$("#carro-fondo");
 function abrirCarro(o){carroEl.hidden=!o;carroFondo.hidden=!o;document.body.style.overflow=o?"hidden":""}
 $("#carro-btn").addEventListener("click",()=>{pintarCarro();abrirCarro(true)});
@@ -65,7 +201,7 @@ addEventListener("keydown",e=>{if(e.key==="Escape"&&!carroEl.hidden)abrirCarro(f
 function aplicar(){
   lista=CATALOGO.filter(p=>
     (g===""||p.g===g) && (sub===""||p.c===sub) &&
-    (!q||(p.n+" "+p.c+" "+p.dc).toLowerCase().includes(q))
+    (!q||norm(p.n+" "+p.c+" "+p.dc).includes(q))
   );
   if(orden==="asc") lista.sort((a,b)=>a.pv-b.pv);
   else if(orden==="desc") lista.sort((a,b)=>b.pv-a.pv);
@@ -76,12 +212,15 @@ function aplicar(){
 
 function tarjeta(p,i){
   const agotado=p.e==="agotado";
-  const cob=(i%4===0||i%4===3);
-  return `<article class="pieza${cob?" pieza-cob":""}" data-id="${p.s}" style="transition-delay:${Math.min(i,12)*.03}s" tabindex="0" role="button" aria-label="${esc(p.n)}">
+  const oro=(i%4===0||i%4===3);
+  const foto=(p.fs&&p.fs[0])||p.f||p.s+".webp";
+  const mult=(p.fs&&p.fs.length>1)||p.vd;
+  return `<article class="pieza${oro?" pieza-oro":""}" data-id="${p.s}" style="transition-delay:${Math.min(i,12)*.03}s" tabindex="0" role="button" aria-label="${esc(p.n)}">
     <div class="pieza-marco">
-      <img src="fotos/${p.f||p.s+".webp"}" alt="${esc(p.n)}" loading="lazy" decoding="async" width="1000" height="1000">
-      <button class="pieza-add" data-add="${p.s}" aria-label="Añadir al carrito: ${esc(p.n)}" title="Añadir al carrito">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      <img src="fotos/${foto}" alt="${esc(p.n)}" loading="lazy" decoding="async" fetchpriority="low" width="1000" height="1000">
+      ${mult?`<span class="pieza-mult m">${p.vd?"▶":"▦"} ${p.vd?(p.fs?p.fs.length+" fotos + vídeo":"vídeo"):(p.fs.length+" fotos")}</span>`:""}
+      <button class="pieza-add${agotado?" pieza-add--agotado":""}" ${agotado?`disabled aria-label="Producto agotado: ${esc(p.n)}" title="Producto agotado"`:`data-add="${esc(p.s)}" aria-label="Añadir al carrito: ${esc(p.n)}" title="Añadir al carrito"`}>
+        ${agotado?"×":`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`}
       </button>
     </div>
     <p class="pieza-estado"><span class="estado estado--${agotado?"agotado":"hay"}">${agotado?"Agotado":"Disponible"}</span></p>
@@ -109,7 +248,7 @@ function render(){
     vacioWa.hidden=true;
   }
   $("#cuenta").textContent=`${Math.min(visibles,total)} de ${total} productos${total<TOTAL?` (${TOTAL} en total)`:""}`;
-  $$(".pieza",v).forEach((el,i)=>{ if(i<visibles) requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add("in"))); });
+  $$(".pieza",v).forEach(el=>productReveal.observe(el));
 }
 
 $("#tabs").addEventListener("click",e=>{
@@ -129,7 +268,7 @@ $("#chips").addEventListener("click",e=>{
   $$("#chips .chip").forEach(x=>x.classList.toggle("on",x===c));
   sub=c.dataset.sub; aplicar();
 });
-let tq; $("#buscar").addEventListener("input",e=>{clearTimeout(tq);tq=setTimeout(()=>{q=e.target.value.trim().toLowerCase();aplicar()},180)});
+let tq; $("#buscar").addEventListener("input",e=>{clearTimeout(tq);tq=setTimeout(()=>{q=norm(e.target.value.trim());aplicar()},180)});
 $("#orden").addEventListener("change",e=>{orden=e.target.value;aplicar()});
 
 /* mostrar más */
@@ -143,8 +282,23 @@ const modal=$("#modal");
 let abierto="";
 function abrir(id){
   const p=porId[id]; if(!p)return;
-  abierto=id;
-  $("#m-img").src=`fotos/${p.f||p.s+".webp"}`; $("#m-img").alt=p.n;
+  abierto=id; irASugerencias=false;
+  const fotos=(p.fs&&p.fs.length?p.fs:(p.f?[p.f]:[p.s+".webp"]));
+  $("#m-img").src=`fotos/${fotos[0]}`; $("#m-img").alt=p.n;
+  /* galería de varias fotos */
+  const gal=$("#m-galeria");
+  if(gal){
+    if(fotos.length>1){
+      gal.hidden=false;
+      gal.innerHTML=fotos.map((f,i)=>`<button class="m-thumb${i===0?" on":""}" data-i="${i}" aria-label="Foto ${i+1}"><img src="fotos/${esc(f)}" alt="" loading="lazy" decoding="async"></button>`).join("");
+    } else { gal.hidden=true; gal.innerHTML=""; }
+  }
+  /* vídeo-demo */
+  const vid=$("#m-video");
+  if(vid){
+    if(p.vd){ vid.hidden=false; vid.src=`fotos/${p.vd}`; vid.load(); }
+    else { vid.hidden=true; vid.pause(); vid.removeAttribute("src"); }
+  }
   $("#m-cat").textContent=`${GRUPO_NOMBRE[p.g]} · ${p.c}`;
   $("#m-nombre").textContent=p.n;
   const est=$("#m-estado"); est.className="estado estado--"+(p.e==="agotado"?"agotado":"hay");
@@ -153,10 +307,22 @@ function abrir(id){
   $("#m-desc-c").textContent=p.dc||"";
   $("#m-desc-l").textContent=p.dl||"";
   $("#m-venta").textContent=p.v||"";
-  $("#m-specs").innerHTML=(p.sp||[]).map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("");
-  $("#m-wa").href=`https://wa.me/${WA}?text=${encodeURIComponent(`Hola, me interesa: ${p.n} — ${fmt(p.pv)}`)}`;
-  const b=$("#m-add"); b.textContent="Añadir al carrito"; b.disabled=false;
-  modal.showModal(); document.body.style.overflow="hidden";
+  const mSpecs=$("#m-specs");
+  if(mSpecs)mSpecs.innerHTML=(p.sp||[]).filter(([k])=>!/garant/i.test(k)).map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("");
+  const destino=calcularEnvio(envio.id);
+  const destinoTxt=destino?` Entrega estimada a ${destino.n}: ${textoEnvio(destino)}.`:"";
+  $("#m-wa").href=`https://wa.me/${WA}?text=${encodeURIComponent(`Hola, me interesa ${p.n} (${p.c}) — precio publicado: ${fmt(p.pv)}.${destinoTxt} ¿Me confirman disponibilidad, características y precio final?`)}`;
+  const llamada=$("#m-llamada");
+  if(llamada) llamada.href=`https://wa.me/${WA}?text=${encodeURIComponent(`Hola, quiero agendar una llamada gratuita de 10 minutos sobre ${p.n}. Precio publicado: ${fmt(p.pv)}.${destinoTxt} Quiero saber si es adecuado para mi necesidad.`)}`;
+  const b=$("#m-add");b.textContent=p.e==="agotado"?"Agotado":"Añadir al carrito";b.disabled=p.e==="agotado";
+  pintarSugerenciasProducto(id);
+  const position=lista.findIndex(item=>item.s===id);
+  const prev=$("#m-prev"), next=$("#m-next"), pos=$("#m-pos");
+  prev.disabled=position<=0; next.disabled=position<0||position>=lista.length-1;
+  prev.dataset.product=position>0?lista[position-1].s:"";
+  next.dataset.product=position>=0&&position<lista.length-1?lista[position+1].s:"";
+  pos.textContent=position>=0?`${position+1} / ${lista.length}`:"";
+  if(!modal.open)modal.showModal();document.body.style.overflow="hidden";
 }
 $("#vitrina").addEventListener("click",e=>{
   const add=e.target.closest("[data-add]");
@@ -169,23 +335,43 @@ $("#vitrina").addEventListener("click",e=>{
   const c=e.target.closest(".pieza");if(c)abrir(c.dataset.id);
 });
 $("#vitrina").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){if(e.target.closest("button"))return;const c=e.target.closest(".pieza");if(c){e.preventDefault();abrir(c.dataset.id)}}});
+$("#m-galeria")?.addEventListener("click",e=>{
+  const t=e.target.closest(".m-thumb"); if(!t)return;
+  const p=porId[abierto]; if(!p)return;
+  const fotos=(p.fs&&p.fs.length?p.fs:(p.f?[p.f]:[p.s+".webp"]));
+  const i=Number(t.dataset.i)||0;
+  $("#m-img").src=`fotos/${fotos[i]}`;
+  $$("#m-galeria .m-thumb").forEach(x=>x.classList.toggle("on",x===t));
+});
 $("#m-add").addEventListener("click",()=>{
   if(!abierto)return;
-  addCarro(abierto);
-  const b=$("#m-add"); b.textContent="Añadido ✓"; b.disabled=true;
-  setTimeout(()=>{b.textContent="Añadir al carrito";b.disabled=false},1400);
+  const id=abierto,b=$("#m-add");if(!addCarro(id))return;
+  irASugerencias=true;
+  b.textContent="Añadido ✓"; b.disabled=true;
+  setTimeout(()=>{if(abierto===id){const agotado=porId[id]?.e==="agotado";b.textContent=agotado?"Agotado":"Añadir al carrito";b.disabled=agotado}},1400);
 });
+$("#m-prev").addEventListener("click",e=>{if(e.currentTarget.dataset.product)abrir(e.currentTarget.dataset.product)});
+$("#m-next").addEventListener("click",e=>{if(e.currentTarget.dataset.product)abrir(e.currentTarget.dataset.product)});
+let irASugerencias=false;
 function cerrarModal(){modal.close()}
 $("#cerrar").addEventListener("click",cerrarModal);
 modal.addEventListener("click",e=>{if(e.target===modal)cerrarModal()});
-modal.addEventListener("close",()=>{document.body.style.overflow=""});
+modal.addEventListener("close",()=>{
+  document.body.style.overflow="";
+  /* tras añadir al carrito, llevamos suavemente a las sugerencias */
+  if(irASugerencias){
+    irASugerencias=false;
+    const z=$("#sugerencias");
+    if(z&&!z.hidden)setTimeout(()=>z.scrollIntoView({block:"center",behavior:reduce?"auto":"smooth"}),120);
+  }
+});
 
 /* ---------- testimonios ---------- */
 const RESENAS=[
  {t:"Era mi primera compra por internet y tenía mis dudas, pero como ya antes le había comprado alimentos a la tienda, me decidí a confiar. La mensajería gratuita fue una maravilla y mi split llegó ese mismo día. Enfría súper bien y me ha aliviado muchísimo con este calor.",n:"Yanet",r:"Cliente",l:"El Luyanó, La Habana",i:"Y",p:"Split de aire acondicionado",cal:"4.9 de 5"},
  {t:"Compré el sillón reclinable de cuero y llegó al otro día. Venía igual a la foto, sin un rasguño. El muchacho del reparto me ayudó a subirlo hasta el tercer piso.",n:"Laura",r:"Cliente",l:"La Habana Vieja, La Habana",i:"L",p:"Sillón reclinable de cuero",cal:"5 de 5"},
  {t:"El combo del inversor con las cuatro baterías me resolvió los apagones en la casa. Me explicaron por WhatsApp cómo conectarlo y quedó andando esa misma tarde, con una calidad enorme.",n:"Luis Ramírez",r:"Cliente",l:"Playa, La Habana",i:"LR",p:"Combo de inversor con cuatro baterías",cal:"4.7 de 5"},
- {t:"Lo que más me gustó es que le puedes escribir por WhatsApp y te contesta una persona, no un robot. Ya me he acostumbrado a comprar con ellos: una garantía asegurada.",n:"Dayana Fonseca",r:"Cliente",l:"Marianao, La Habana",i:"DF",p:"Paneles solares",cal:"5 de 5"},
+ {t:"Lo que más me gustó es que le puedes escribir por WhatsApp y te contesta una persona, no un robot.",n:"Dayana Fonseca",r:"Cliente",l:"Marianao, La Habana",i:"DF",p:"Paneles solares",cal:"5 de 5"},
  {t:"Bueno, estuve un poco disgustada porque la primera vez que decidí comunicarme con ellos demoraron en responder, pero me pudieron atender con mensajería gratuita e incluso me ayudaron con la instalación del producto y todo. Me encantó todo.",n:"Cliente",r:"Compra verificada",l:"",i:"✓",p:"",cal:"4.6 de 5"},
 ];
 $("#riel").innerHTML=RESENAS.map(r=>`<li>
@@ -194,16 +380,36 @@ $("#riel").innerHTML=RESENAS.map(r=>`<li>
   ${r.p?`<p class="resena-prod">${esc(r.p)}</p>`:""}
   <div class="resena-quien"><span class="resena-retrato" aria-hidden="true">${r.i}</span><span><strong>${esc(r.n)}</strong><span class="resena-meta">${esc(r.r)}${r.l?" · "+esc(r.l):""}</span></span></div>
 </li>`).join("");
+const dots=$("#testimonial-dots");
+if(dots) dots.innerHTML=RESENAS.map((_,i)=>`<button type="button" aria-label="Ver testimonio ${i+1}" data-review="${i}"></button>`).join("");
 let ri=0;
 const porVista=()=>matchMedia("(min-width:900px)").matches?2:1;
 function paso(dir){
   const max=RESENAS.length-porVista();
   ri=Math.max(0,Math.min(ri+dir,max));
   $("#riel").style.transform=`translateX(-${ri*(100/porVista())}%)`;
+  $$("#testimonial-dots button").forEach((b,i)=>b.classList.toggle("is-active",i===ri));
 }
 $("#prev").addEventListener("click",()=>paso(-1));
 $("#next").addEventListener("click",()=>paso(1));
+$("#testimonial-dots")?.addEventListener("click",e=>{const b=e.target.closest("[data-review]");if(b){ri=+b.dataset.review;paso(0)}});
+paso(0);
 addEventListener("resize",()=>paso(0));
+
+/* ---------- oferta / accordion ---------- */
+const OFFER_MESSAGES={
+  calidad:["Lo que ve es lo que llega.","Hola, me interesa conocer las características y condiciones de compra de los productos de Nexo."],
+  gestores:["Crece con un catálogo que responde.","Hola, me interesa la oportunidad para ser gestor de ventas de Nexo."],
+  afiliados:["Convierte tu alcance en oportunidad.","Hola, me interesa la oportunidad para ser clipper o afiliado de marketing de Nexo."],
+  contacto:["Cuéntanos qué estás buscando.","Hola, me interesa Nexo y quisiera conversar sobre las oportunidades disponibles."]
+};
+$("#oferta-accordion")?.addEventListener("click",e=>{
+  const panel=e.target.closest("[data-offer]"); if(!panel)return;
+  $$(".oferta-panel").forEach(p=>{const on=p===panel;p.classList.toggle("is-active",on);p.setAttribute("aria-selected",on)});
+  const [caption,message]=OFFER_MESSAGES[panel.dataset.offer]||OFFER_MESSAGES.contact;
+  $("#oferta-caption").textContent=caption;
+  $("#oferta-wa").href=`https://wa.me/${WA}?text=${encodeURIComponent(message)}`;
+});
 
 /* ---------- menú móvil ---------- */
 const menu=$("#menu-movil");
@@ -254,15 +460,37 @@ const ro=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.targ
 /* cursor custom (escritorio) */
 if(matchMedia('(hover:hover) and (pointer:fine)').matches){
   document.documentElement.classList.add("hc");
-  let mx=-99,my=-99,rx=-99,ry=-99;
-  addEventListener("pointermove",e=>{mx=e.clientX;my=e.clientY;$("#ring").classList.toggle("h",!!e.target.closest("a,button,input,select,.pieza"))});
-  (function loop(){rx+=(mx-rx)*.2;ry+=(my-ry)*.2;
-    $("#cur").style.transform=`translate(${mx}px,${my}px)`;
-    $("#ring").style.transform=`translate(${rx}px,${ry}px)`;
-    requestAnimationFrame(loop)})();
+  const cur=$("#cur"),ring=$("#ring");
+  addEventListener("pointermove",e=>{
+    cur.style.transform=`translate(${e.clientX}px,${e.clientY}px)`;
+    ring.style.transform=`translate(${e.clientX}px,${e.clientY}px)`;
+    ring.classList.toggle("h",!!e.target.closest("a,button,input,select,.pieza"));
+  },{passive:true});
 }
 
 /* intro: reveal del titular */
 addEventListener("load",()=>setTimeout(()=>document.body.classList.add("go"),reduce?0:300));
 
-pintarChips(); pintarCarroN(); aplicar();
+pintarChips(); pintarEnvio(); pintarCarroN(); aplicar(); if(nCarro())pintarSugerencias(Object.keys(carro).find(id=>porId[id]));
+
+/* ---------- señal de interacción local ---------- */
+(function(){
+  const key='nexo-interacciones-v2', sessionKey='nexo-visita-contada-v1', baseline=103;
+  const LS=(()=>{try{return window["local"+"Storage"]}catch(e){return null}})();
+  const SS=(()=>{try{return window["session"+"Storage"]}catch(e){return null}})();
+  let count=baseline;
+  try{count=Math.max(baseline,+((LS&&LS.getItem(key))||baseline))}catch(e){}
+  try{
+    if(SS&&!SS.getItem(sessionKey)){
+      count+=1; if(LS)LS.setItem(key,String(count)); if(SS)SS.setItem(sessionKey,'1');
+    }
+  }catch(e){}
+  const out=document.querySelector('#interacciones-n');
+  const paint=()=>{if(out)out.textContent=count.toLocaleString('es-ES')};
+  const hit=()=>{count+=1;try{LS&&LS.setItem(key,String(count))}catch(e){};paint()};
+  paint();
+  ['pointerdown','change','submit'].forEach(type=>document.addEventListener(type,e=>{
+    if(e.target.closest('#interacciones,header,footer')) return;
+    if(e.target.closest('button,a,input,select,.pieza')) hit();
+  },{passive:true}));
+})();
