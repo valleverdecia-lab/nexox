@@ -48,8 +48,6 @@
   if(window.gsap && window.ScrollTrigger && !reduced){
     gsap.registerPlugin(ScrollTrigger);
     gsap.to(root.rotation,{y:.38,x:.16,ease:'none',scrollTrigger:{trigger:section,start:'top bottom',end:'bottom top',scrub:1}});
-    gsap.from('.showroom-copy',{autoAlpha:0,x:-30,duration:.8,immediateRender:false,scrollTrigger:{trigger:section,start:'top 72%',once:true}});
-    gsap.from('.showroom-product',{autoAlpha:0,y:50,rotateZ:4,stagger:.12,duration:.85,ease:'power3.out',immediateRender:false,scrollTrigger:{trigger:'.showroom-products',start:'top 78%',once:true}});
   }
   document.querySelectorAll('[data-showroom-id]').forEach(button=>button.addEventListener('click',()=>{
     const id=button.dataset.showroomId;
