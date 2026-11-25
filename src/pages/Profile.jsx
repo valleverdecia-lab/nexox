@@ -182,7 +182,7 @@ export default function Profile() {
       <div className="glass" style={{padding:18,marginBottom:16}}>
         <div className="eyebrow">Todo lo que puedes hacer</div>
         <div style={{display:'grid',gap:8}}>
-          {[['Voz en chats','En un chat, toca “Voz”, graba hasta 60s y suelta para enviar. También tienes Voz del Malecón en tu perfil.'],['Regalos de Lujuria','En chat toca “Regalo” para enviar Miradas, Suspiros o packs premium.'],['Caja diaria','Abre tu Caja de la Calle 1 vez al día: premios reales gratis.'],['Radar Calentón','Activa ubicación, filtra por intención/distancia y ponte “Disponible 30 min”.'],['La Calle','Publica de 20:00–05:00, responde la Pregunta del Día y entra a Afinidad.'],['Modos ciegos','Cuando toque Voz Ciega o Confesión Ciega, ligas sin ver perfil hasta el match.']].map(([t,d])=>(
+          {[['Voz en chats','En un chat, toca “Voz”, graba hasta 60s y suelta para enviar. También tienes Voz del Malecón en tu perfil.'],['Regalos de Lujuria','En chat toca “Regalo” para enviar Miradas, Suspiros o packs premium.'],['Caja diaria','Abre tu Caja de la Calle 1 vez al día: premios reales gratis.'],['Radar Calentón','Activa ubicación, filtra por intención/distancia y ponte “Disponible 30 min”.'],['La Calle','Publica de 20:00–05:00, responde la Pregunta del Día y entra a Afinidad.'],['Modos ciegos','Cuando toque Voz Ciega o Confesión Ciega, ligas sin ver perfil hasta el match.'],['Juegos de Placer','Sección +18 con recomendaciones sensuales curadas, consentimiento y compra por WhatsApp.']].map(([t,d])=>(
             <div key={t} className="glass-dark" style={{padding:12,borderRadius:12}}><div style={{fontWeight:700,fontSize:'.86rem',color:'#F2C94C'}}>{t}</div><div style={{fontSize:'.8rem',color:'var(--pearl-muted)',lineHeight:1.5}}>{d}</div></div>
           ))}
         </div>
@@ -230,6 +230,37 @@ export default function Profile() {
           <div className="glass-dark" style={{padding:12,borderRadius:12,fontSize:'.84rem',color:'var(--pearl-dim)'}}><b style={{color:'#F2C94C'}}>Packs CUP:</b> 5 Velas 800 · 5 Fuegos 1,400 · 3 Lunas Rojas 1,200 · Mix 2,000. Compra por WhatsApp, sin suscripción forzada.</div>
         </div>
         <a className="btn btn-glass btn-sm" style={{marginTop:12}} href={waLink(`Hola, quiero comprar un Pack Lujuria en Palacalle. Mi ID: ${user?.id}. Nombre: ${profile?.display_name||''}.`)} target="_blank" rel="noopener noreferrer">Comprar Pack Lujuria</a>
+      </div>
+
+      <div className="glass" style={{padding:18,marginBottom:16}}>
+        <div className="eyebrow">Juegos de Placer · +18</div>
+        <h3 style={{fontWeight:700,marginBottom:8}}>Curiosidad elegante, siempre con consentimiento</h3>
+        <p style={{color:'var(--pearl-muted)',fontSize:'.86rem',marginBottom:12}}>Selección curada para subir la temperatura con clase: bienestar íntimo, juego en pareja y exploración suave. Sin contenido explícito, sin presión.</p>
+        {!profile?.pleasure_ack ? (
+          <div className="glass-dark" style={{padding:14,borderRadius:14}}>
+            <div style={{fontSize:'.84rem',color:'var(--pearl-dim)',lineHeight:1.6,marginBottom:12}}>Confirmo que soy mayor de 18 años y quiero ver recomendaciones de bienestar íntimo/placer con enfoque consensuado y respetuoso.</div>
+            <button className="btn btn-primary btn-sm" onClick={async()=>{ const {error}=await supabase.from('profiles').update({pleasure_ack:true}).eq('id',user.id); if(error) push(error.message,'err'); else { push('Acceso activado','ok'); refreshProfile(); } }}>Entrar a Juegos de Placer</button>
+          </div>
+        ) : (
+          <div style={{display:'grid',gap:10}}>
+            {[
+              ['Vela de masaje','Ambiente + tacto. Ideal para romper el hielo.','1,200 CUP'],
+              ['Aceite de masaje','Suave, sensual, sin prisa.','900 CUP'],
+              ['Dados de pareja','Juego divertido para subir la temperatura.','700 CUP'],
+              ['Venda de ojos','Misterio y confianza, siempre consensuado.','600 CUP'],
+              ['Pluma sensorial','Juego de anticipación, ligero y elegante.','650 CUP'],
+            ].map(([name,desc,price])=>(
+              <div key={name} className="glass-dark" style={{padding:12,borderRadius:14,display:'flex',justifyContent:'space-between',gap:10,alignItems:'center',flexWrap:'wrap'}}>
+                <div style={{flex:'1 1 200px'}}><div style={{fontWeight:700}}>{name}</div><div style={{fontSize:'.8rem',color:'var(--pearl-muted)'}}>{desc}</div></div>
+                <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                  <span style={{color:'#F2C94C',fontWeight:700,fontSize:'.84rem'}}>{price}</span>
+                  <a className="btn btn-glass btn-sm" href={waLink(`Hola, quiero consultar por "${name}" (${price}) en Juegos de Placer de Palacalle. Mi ID: ${user?.id}.`)} target="_blank" rel="noopener noreferrer">Consultar</a>
+                </div>
+              </div>
+            ))}
+            <p style={{fontSize:'.74rem',color:'var(--pearl-muted)',lineHeight:1.6}}>Recomendaciones curadas, compra/consulta por WhatsApp. Solo +18, siempre con consentimiento y comunicación.</p>
+          </div>
+        )}
       </div>
 
       <div className="glass" style={{padding:18,marginBottom:16}}>
