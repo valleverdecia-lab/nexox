@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -12,6 +13,7 @@ export default function Profile() {
  const [saving, setSaving] = useState(false);
  const [form, setForm] = useState({});
  const [whispers, setWhispers] = useState([]);
+  const [planIdx, setPlanIdx] = useState(1);
  useEffect(()=>{ if(profile) setForm({
   display_name:profile.display_name||'', bio:profile.bio||'', country:profile.country||'', ciudad:profile.ciudad||'',
   gender:profile.gender||'', seeking:profile.seeking||'', birth_year:profile.birth_year||'', ig_handle:profile.ig_handle||''
@@ -34,7 +36,13 @@ export default function Profile() {
   } catch { push('No pudimos obtener tu ubicación','err'); }
  };
 
- const premiumMsg = `Hola, quiero activar Palacalle Premium. Mi ID de usuario es: ${user?.id}. Mi nombre en la app es: ${profile?.display_name||''}.`;
+ const PLANS = [
+    { id:'1m', label:'1 mes', price:'1,500 CUP', per:'1,500 CUP/mes', save:'Acceso total', note:'Ideal para probar el fuego.' },
+    { id:'3m', label:'3 meses', price:'3,900 CUP', per:'1,300 CUP/mes', save:'Ahorras 600 CUP', note:'El punto dulce para conectar en serio.' },
+    { id:'6m', label:'6 meses', price:'6,900 CUP', per:'1,150 CUP/mes', save:'Ahorras 2,100 CUP', note:'Para quien viene a quedarse en la calle.' },
+  ];
+  const selectedPlan = PLANS[planIdx] || PLANS[1];
+  const premiumMsg = `Hola, quiero activar Palacalle Premium (${selectedPlan.label} - ${selectedPlan.price}). Mi ID de usuario es: ${user?.id}. Mi nombre en la app es: ${profile?.display_name||''}.`;
  const premiumLink = waLink(premiumMsg);
 
  return (
@@ -88,16 +96,51 @@ export default function Profile() {
        </div>
       ))}
      </div>
-     <div className="glass" style={{padding:14,marginBottom:14}}>
-      <div style={{fontSize:'.72rem',color:'var(--pearl-muted)',letterSpacing:'.08em',textTransform:'uppercase',marginBottom:6}}>Planes (CUP)</div>
-      <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
-       {[['1 semana','1,500 CUP'],['1 mes','4,500 CUP'],['3 meses','11,000 CUP']].map(([l,p])=>(
-        <div key={l} className="chip" style={{padding:'10px 14px',fontSize:'.78rem'}}><strong style={{color:'var(--pearl)',marginRight:6}}>{l}</strong> <span style={{color:'#F2C94C'}}>{p}</span></div>
-       ))}
+     <div style={{margin:'8px 0 18px'}}>
+      <div style={{fontSize:'.72rem',color:'var(--pearl-muted)',letterSpacing:'.08em',textTransform:'uppercase',marginBottom:12}}>Elige tu plan</div>
+      <div style={{position:'relative',height:280,display:'flex',alignItems:'center',justifyContent:'center',overflow:'visible'}}>
+        {PLANS.map((pl,i)=>{
+          const offset = i - planIdx;
+          const active = i===planIdx;
+          return (
+            <motion.div key={pl.id}
+              onClick={()=>setPlanIdx(i)}
+              drag={active?'x':false}
+              dragConstraints={{left:0,right:0}}
+              onDragEnd={(e,info)=>{ if(info.offset.x<-60 && planIdx<PLANS.length-1) setPlanIdx(planIdx+1); if(info.offset.x>60 && planIdx>0) setPlanIdx(planIdx-1); }}
+              animate={{
+                x: offset*28,
+                scale: active?1:0.9 - Math.abs(offset)*0.04,
+                opacity: Math.abs(offset)>1?0: active?1:0.45,
+                rotate: offset*-2.5,
+                zIndex: 10-Math.abs(offset),
+                filter: active?'blur(0px)':'blur(0.5px)'
+              }}
+              transition={{type:'spring',stiffness:260,damping:26}}
+              style={{position:'absolute',width:'min(320px,86vw)',cursor:active?'grab':'pointer',touchAction:'pan-y'}}
+            >
+              <div className="glass-strong" style={{padding:'28px 24px',borderRadius:28,borderColor:active?'rgba(212,160,23,.55)':'rgba(212,160,23,.18)',boxShadow:active?'0 30px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.16)':'0 12px 40px rgba(0,0,0,.35)',minHeight:240,display:'flex',flexDirection:'column',justifyContent:'space-between'}}>
+                <div>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+                    <span className={`chip ${active?'chip-laca':''}`}>{pl.label}</span>
+                    {i===2 && <span style={{fontSize:'.68rem',fontWeight:700,color:'#111',background:'linear-gradient(135deg,#D4A017,#F2C94C)',padding:'4px 10px',borderRadius:999}}>MEJOR VALOR</span>}
+                  </div>
+                  <div style={{fontFamily:'var(--serif)',fontSize:'clamp(2rem,8vw,3rem)',lineHeight:1,color:'#F2C94C',marginBottom:6}}>{pl.price}</div>
+                  <div style={{color:'var(--pearl-dim)',fontSize:'.9rem',marginBottom:12}}>{pl.per}</div>
+                  <div style={{display:'inline-flex',padding:'6px 12px',borderRadius:999,background:'rgba(212,160,23,.12)',border:'1px solid rgba(212,160,23,.22)',color:'#F2C94C',fontSize:'.78rem',fontWeight:600}}>{pl.save}</div>
+                </div>
+                <p style={{color:'var(--pearl-muted)',fontSize:'.85rem',lineHeight:1.6,marginTop:16}}>{pl.note}</p>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+      <div style={{display:'flex',justifyContent:'center',gap:8,marginTop:8,marginBottom:14}}>
+        {PLANS.map((_,i)=>(<button key={i} onClick={()=>setPlanIdx(i)} aria-label={`Plan ${i+1}`} style={{width:i===planIdx?28:8,height:8,borderRadius:999,border:'none',background:i===planIdx?'#D4A017':'rgba(245,245,242,.25)',transition:'all .3s'}} />))}
       </div>
      </div>
      <a className="btn btn-primary" href={premiumLink} target="_blank" rel="noopener noreferrer" style={{width:'100%'}}>
-      Activar por WhatsApp · {WHATSAPP_DISPLAY}
+      Activar {selectedPlan.label} por WhatsApp · {WHATSAPP_DISPLAY}
      </a>
      <p style={{fontSize:'.72rem',color:'var(--pearl-muted)',marginTop:10,lineHeight:1.6}}>El mensaje ya incluye tu ID para activar tu cuenta rápido. Pagos en CUP.</p>
     </div>
