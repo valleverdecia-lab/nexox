@@ -22,6 +22,7 @@ export default function Calle() {
  const [whisperTo, setWhisperTo] = useState(null); // {id,name}
  const [whisperBody, setWhisperBody] = useState('');
   const [dailyAnswers, setDailyAnswers] = useState([]);
+  const [eventCount, setEventCount] = useState(0);
 
  useEffect(()=>{ const t=setInterval(()=>setOpen(isBoardOpen()), 30000); return ()=>clearInterval(t); },[]);
 
