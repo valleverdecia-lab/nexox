@@ -71,7 +71,7 @@ export default function Calenton() {
 
   const like = async (p) => {
     const { error } = await supabase.from('likes').upsert({from_id:user.id, to_id:p.id});
-    if(error) return push('No se pudo dar like','err');
+    if(error) return push(String(error.message).includes('like_limit')?'Llegaste a tu límite de likes de hoy. Se recargan mañana.':'No se pudo dar like','err');
     const { data: mutual } = await supabase.from('likes').select('from_id').eq('from_id',p.id).eq('to_id',user.id).maybeSingle();
     if(mutual){ push(`¡Match con ${p.display_name}!`, 'ember'); }
     else push(`Le mandaste calor a ${p.display_name}`, 'ok');
@@ -153,6 +153,7 @@ export default function Calenton() {
                 <div style={{flex:'1 1 220px',minWidth:0}}>
                   <div style={{fontWeight:700,fontSize:'1.05rem',display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
                     {p.display_name}{ageFromYear(p.birth_year)?`, ${ageFromYear(p.birth_year)}`:''}
+                    {p.cosmetic_title && <span className="chip" style={{fontSize:'.66rem'}}>{p.cosmetic_title}</span>}
                     {p.available_until && new Date(p.available_until)>new Date() && <span className="chip chip-live">Disponible ahora</span>}
                     {p.verification_status==='verified' && <span className="chip chip-laca">Verificado</span>}
                   </div>

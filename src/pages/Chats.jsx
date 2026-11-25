@@ -38,6 +38,7 @@ export default function Chats() {
   const mediaRef = useRef(null);
   const chunksRef = useRef([]);
   const timerRef = useRef(null);
+  const maxTimerRef = useRef(null);
 
   useEffect(()=>{ const t=setInterval(()=>setTick(x=>x+1), 30000); return ()=>clearInterval(t); },[]);
 
@@ -63,7 +64,7 @@ export default function Chats() {
 
   useEffect(()=>{ loadMatches(); },[user,tick]);
   useEffect(()=>{ if(!active) return; loadMsgs(active.id); const t=setInterval(()=>loadMsgs(active.id), 4000); return ()=>clearInterval(t); },[active?.id]);
-  useEffect(()=>()=>{ if(timerRef.current) clearInterval(timerRef.current); if(mediaRef.current?.state==='recording') mediaRef.current.stop(); },[]);
+  useEffect(()=>()=>{ if(timerRef.current) clearInterval(timerRef.current); if(maxTimerRef.current) clearTimeout(maxTimerRef.current); if(mediaRef.current?.state==='recording') mediaRef.current.stop(); },[]);
 
   const send = async (e, preset) => {
     e?.preventDefault?.();
@@ -78,28 +79,32 @@ export default function Chats() {
   const startRecording = async () => {
     if(!active) return;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:true, noiseSuppression:true, sampleRate:44100 } });
       const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : (MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '');
-      const mr = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      const mr = new MediaRecorder(stream, mime ? { mimeType: mime, audioBitsPerSecond: 24000 } : { audioBitsPerSecond: 24000 });
       chunksRef.current = [];
       mr.ondataavailable = (ev)=>{ if(ev.data.size>0) chunksRef.current.push(ev.data); };
       mr.onstop = async () => {
         stream.getTracks().forEach(t=>t.stop());
         if(timerRef.current) clearInterval(timerRef.current);
+        if(maxTimerRef.current) clearTimeout(maxTimerRef.current);
         setRecording(false);
         const blob = new Blob(chunksRef.current, { type: mr.mimeType || 'audio/webm' });
         if(blob.size < 1000) { push('Nota de voz muy corta','err'); return; }
         await sendAudio(blob, mr.mimeType || 'audio/webm');
       };
-      mediaRef.current = mr; mr.start();
+      mediaRef.current = mr; mr.start(250);
       setRecSec(0); setRecording(true);
       timerRef.current = setInterval(()=>setRecSec(s=>s+1), 1000);
+      maxTimerRef.current = setTimeout(()=>{ if(mediaRef.current?.state==='recording') mediaRef.current.stop(); }, 60000);
     } catch { push('No pudimos acceder al micrófono','err'); }
   };
   const stopRecording = () => { if(mediaRef.current?.state==='recording') mediaRef.current.stop(); };
   const cancelRecording = () => {
     try{ if(mediaRef.current?.state==='recording'){ mediaRef.current.onstop=()=>mediaRef.current?.stream?.getTracks?.().forEach(t=>t.stop()); mediaRef.current.stop(); } }catch{}
-    if(timerRef.current) clearInterval(timerRef.current); chunksRef.current=[]; setRecording(false); setRecSec(0);
+    if(timerRef.current) clearInterval(timerRef.current);
+    if(maxTimerRef.current) clearTimeout(maxTimerRef.current);
+    chunksRef.current=[]; setRecording(false); setRecSec(0);
   };
   const sendAudio = async (blob, mime) => {
     if(!active) return;
@@ -191,7 +196,7 @@ export default function Chats() {
               <>
                 <div style={{flex:1,display:'flex',alignItems:'center',gap:10,padding:'0 8px'}}>
                   <span style={{width:10,height:10,borderRadius:999,background:'#E05353',display:'inline-block',animation:'pulse 1s infinite'}}></span>
-                  <span style={{fontWeight:600}}>Grabando {recSec}s</span>
+                  <span style={{fontWeight:600}}>Grabando {recSec}s / 60s</span>
                 </div>
                 <button type="button" className="btn btn-glass btn-sm" onClick={cancelRecording}>Cancelar</button>
                 <button type="button" className="btn btn-primary btn-sm" onClick={stopRecording}>Enviar voz</button>

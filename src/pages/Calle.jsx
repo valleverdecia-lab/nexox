@@ -44,7 +44,7 @@ export default function Calle() {
   };
 
   const load = async () => {
-    let q = supabase.from('posts').select('id,author_id,body,event_slug,created_at,boost_until,profiles:author_id(display_name,avatar_url,ciudad,country,lat,lng)').order('created_at',{ascending:false}).limit(60);
+    let q = supabase.from('posts').select('id,author_id,body,event_slug,created_at,boost_until,reactions,profiles:author_id(display_name,avatar_url,ciudad,country,lat,lng)').order('created_at',{ascending:false}).limit(60);
     if(event!=='todos') q = q.eq('event_slug', event);
     const { data } = await q;
     setPosts(data||[]);
@@ -98,7 +98,7 @@ export default function Calle() {
 
   const likeFromDaily = async (p) => {
     const { error } = await supabase.from('likes').upsert({ from_id:user.id, to_id:p.user_id });
-    if(error) return push(error.message,'err');
+    if(error) return push(String(error.message).includes('like_limit')?'Llegaste a tu límite de likes de hoy. Se recargan mañana.':error.message,'err');
     const { data: mutual } = await supabase.from('likes').select('from_id').eq('from_id',p.user_id).eq('to_id',user.id).maybeSingle();
     if(mutual) push(`Match con ${p.display_name}. La pregunta los unió.`,'laca');
     else push(`Like enviado a ${p.display_name}`,'ok');
@@ -221,7 +221,14 @@ export default function Calle() {
               )}
             </div>
             <p style={{lineHeight:1.7,color:'var(--pearl-dim)',whiteSpace:'pre-wrap'}}>{p.body}</p>
-            <div style={{display:'flex',gap:8,marginTop:12,flexWrap:'wrap'}}>
+            <div style={{display:'flex',gap:8,marginTop:12,flexWrap:'wrap',alignItems:'center'}}>
+              {[
+                ['fire','🔥'],['heart','❤'],['laugh','😂'],['wow','😮']
+              ].map(([k,em])=>{ const r=p.reactions||{}; const count=Object.values(r).filter(v=>v===k).length; const mine=r[user.id]===k; return (
+                <button key={k} className={`chip ${mine?'chip-laca':''}`} style={{cursor:'pointer',padding:'6px 10px'}} onClick={async()=>{ const {data,error}=await supabase.rpc('react_post',{p_post:p.id,p_reaction:k}); if(!error) setPosts(ps=>ps.map(x=>x.id===p.id?{...x,reactions:data}:x)); }}>{em} {count||''}</button>
+              );})}
+            </div>
+            <div style={{display:'flex',gap:8,marginTop:10,flexWrap:'wrap'}}>
               <button className="btn btn-glass btn-sm" onClick={()=>setReplyTo(replyTo===p.id?null:p.id)}>Responder</button>
               {p.author_id===user.id ? <button className="btn btn-glass btn-sm" onClick={async()=>{ const {error}=await supabase.rpc('boost_post',{p_post:p.id,p_hours:1}); if(error) push(error.message.includes('premium_required')?'Boost es Premium':'Error','err'); else { push('Post boosteado 1h','ok'); load(); } }}>Boost</button>
               : <button className="btn btn-glass btn-sm" onClick={async()=>{ const reason=prompt('Motivo del reporte'); if(!reason) return; const {error}=await supabase.from('reports').insert({reporter_id:user.id,target_id:p.author_id,reason:reason.slice(0,300)}); if(error) push(error.message,'err'); else push('Reporte enviado','ok'); }}>Reportar</button>}

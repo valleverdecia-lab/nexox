@@ -47,6 +47,14 @@ function Shell() {
  const loc = useLocation();
  const { user } = useAuth();
  const inApp = loc.pathname.startsWith('/app');
+ useEffect(()=>{
+   if(!inApp || !user) return;
+   const k='pc_cleanup_at';
+   const last=Number(localStorage.getItem(k)||0);
+   if(Date.now()-last < 60*60*1000) return;
+   localStorage.setItem(k,String(Date.now()));
+   import('./lib/supabase').then(({supabase})=>supabase.rpc('cleanup_daily')).catch(()=>{});
+ },[inApp,user?.id]);
  return (
   <div className="app-shell">
    <Background />

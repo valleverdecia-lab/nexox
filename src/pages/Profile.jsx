@@ -19,7 +19,7 @@ export default function Profile() {
   const [recordingVoice, setRecordingVoice] = useState(false);
   const [voiceSec, setVoiceSec] = useState(0);
   const [uploadingVoice, setUploadingVoice] = useState(false);
-  const voiceRecRef = useRef(null); const voiceChunksRef = useRef([]); const voiceTimerRef = useRef(null);
+  const voiceRecRef = useRef(null); const voiceChunksRef = useRef([]); const voiceTimerRef = useRef(null); const voiceMaxRef = useRef(null);
   const [reward, setReward] = useState(null);
   const [claimingReward, setClaimingReward] = useState(false);
   const [viewsInfo, setViewsInfo] = useState({count:0,can_reveal:false,viewers:[]});
@@ -40,6 +40,11 @@ export default function Profile() {
     { id:'6m', label:'6 meses', price:'6,900 CUP', per:'1,150 CUP/mes', save:'Ahorras 2,100 CUP', note:'Para quien viene a quedarse en la calle.' },
   ];
   const selectedPlan = PLANS[planIdx] || PLANS[1];
+  const isPrem = !!(profile?.premium_until && new Date(profile.premium_until) > new Date());
+  const likesLimit = isPrem ? '∞' : 40;
+  const likesLeft = isPrem ? '∞' : Math.max(0, 40 - (profile?.likes_today||0));
+  const whisperLimit = isPrem ? 5 : 1;
+  const whispersLeft = isPrem ? Math.max(0,5-(profile?.whispers_today||0)) : Math.max(0,1-(profile?.whispers_today||0));
   const premiumMsg = `Hola, quiero activar Palacalle Premium (${selectedPlan.label} - ${selectedPlan.price}). Mi ID de usuario es: ${user?.id}. Mi nombre en la app es: ${profile?.display_name||''}.`;
   const premiumLink = waLink(premiumMsg);
 
@@ -81,16 +86,28 @@ export default function Profile() {
     refreshProfile(); loadViews();
   };
 
+  const equipCosmetic = async (title, frame) => {
+    const { error } = await supabase.rpc('equip_cosmetic', { p_title: title, p_frame: frame });
+    if(error) push(error.message.includes('premium_required')?'Ese cosmético es Premium.':'No se pudo equipar','err');
+    else { push('Estilo actualizado','ok'); refreshProfile(); }
+  };
+  const saveStreak = async () => {
+    const { data, error } = await supabase.rpc('save_streak');
+    if(error) push(error.message.includes('no_streak_save')?'Necesitas Premium o un salvavidas de racha.':'No se pudo salvar la racha','err');
+    else { push(data?.msg||'Racha salvada','ok'); refreshProfile(); }
+  };
+
   const startVoice = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true, sampleRate:44100 } });
       const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : (MediaRecorder.isTypeSupported('audio/webm')?'audio/webm':'');
-      const mr = new MediaRecorder(stream, mime?{mimeType:mime}:undefined);
+      const mr = new MediaRecorder(stream, mime?{mimeType:mime, audioBitsPerSecond:24000}:{audioBitsPerSecond:24000});
       voiceChunksRef.current=[];
       mr.ondataavailable = (e)=>{ if(e.data.size>0) voiceChunksRef.current.push(e.data); };
       mr.onstop = async () => {
         stream.getTracks().forEach(t=>t.stop());
         if(voiceTimerRef.current) clearInterval(voiceTimerRef.current);
+        if(voiceMaxRef.current) clearTimeout(voiceMaxRef.current);
         setRecordingVoice(false);
         const blob = new Blob(voiceChunksRef.current, {type: mr.mimeType||'audio/webm'});
         if(blob.size<1000) return push('Nota de voz muy corta','err');
@@ -108,12 +125,13 @@ export default function Profile() {
         } catch(err){ push(err.message||'No se pudo guardar la voz','err'); }
         finally { setUploadingVoice(false); }
       };
-      voiceRecRef.current=mr; mr.start(); setVoiceSec(0); setRecordingVoice(true);
+      voiceRecRef.current=mr; mr.start(250); setVoiceSec(0); setRecordingVoice(true);
       voiceTimerRef.current=setInterval(()=>setVoiceSec(s=>s+1),1000);
+      voiceMaxRef.current=setTimeout(()=>{ if(voiceRecRef.current?.state==='recording') voiceRecRef.current.stop(); }, 60000);
     } catch { push('No pudimos acceder al micrófono','err'); }
   };
   const stopVoice = ()=>{ if(voiceRecRef.current?.state==='recording') voiceRecRef.current.stop(); };
-  const cancelVoice = ()=>{ try{ if(voiceRecRef.current?.state==='recording'){ voiceRecRef.current.onstop=()=>voiceRecRef.current?.stream?.getTracks?.().forEach(t=>t.stop()); voiceRecRef.current.stop(); } }catch{} if(voiceTimerRef.current) clearInterval(voiceTimerRef.current); setRecordingVoice(false); setVoiceSec(0); };
+  const cancelVoice = ()=>{ try{ if(voiceRecRef.current?.state==='recording'){ voiceRecRef.current.onstop=()=>voiceRecRef.current?.stream?.getTracks?.().forEach(t=>t.stop()); voiceRecRef.current.stop(); } }catch{} if(voiceTimerRef.current) clearInterval(voiceTimerRef.current); if(voiceMaxRef.current) clearTimeout(voiceMaxRef.current); setRecordingVoice(false); setVoiceSec(0); };
 
   const checklist = [
     ['Foto de perfil', !!profile?.avatar_url],
@@ -217,7 +235,7 @@ export default function Profile() {
         {(profile?.voice_intro_url||profile?.voice_url) && <audio controls src={profile.voice_intro_url||profile.voice_url} style={{width:'100%',marginBottom:12}} />}
         {recordingVoice ? (
           <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
-            <span className="chip chip-live">Grabando {voiceSec}s</span>
+            <span className="chip chip-live">Grabando {voiceSec}s / 60s</span>
             <button className="btn btn-glass btn-sm" type="button" onClick={cancelVoice}>Cancelar</button>
             <button className="btn btn-primary btn-sm" type="button" onClick={stopVoice}>Guardar voz</button>
           </div>
@@ -242,6 +260,45 @@ export default function Profile() {
           <div style={{display:'flex',gap:10,flexWrap:'wrap'}}><button className="btn btn-primary" disabled={saving}>{saving?'Guardando...':'Guardar cambios'}</button><button type="button" className="btn btn-glass" onClick={saveLocation}>Guardar mi ubicación</button></div>
         </form>
       </Beam>
+
+      <div className="glass" style={{padding:18,marginBottom:16}}>
+        <div className="eyebrow">Estatus y cosméticos</div>
+        <h3 style={{fontWeight:700,marginBottom:8}}>Tu presencia en la calle</h3>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:12}}>
+          {profile?.cosmetic_title ? <span className="chip chip-laca">{profile.cosmetic_title}</span> : <span className="chip">Sin título</span>}
+          {profile?.verification_status==='verified' && <span className="chip chip-laca">Verificada</span>}
+          {(profile?.streak_count||0)>=7 && <span className="chip">Racha 7+</span>}
+          {(profile?.streak_count||0)>=14 && <span className="chip">Racha 14+</span>}
+          {isPrem && <span className="chip chip-laca">Premium</span>}
+        </div>
+        <div style={{fontSize:'.84rem',color:'var(--pearl-muted)',marginBottom:10}}>Títulos (algunos Premium):</div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:12}}>
+          {['','Novato','Nocturno','Corazón caliente','Leyenda de la Calle','Malecón VIP'].map(t=>(
+            <button key={t||'none'} className={`chip ${ (profile?.cosmetic_title||'')===t?'chip-laca':''}`} style={{cursor:'pointer'}} onClick={()=>equipCosmetic(t,null)}>{t||'Sin título'}</button>
+          ))}
+        </div>
+        <div style={{fontSize:'.84rem',color:'var(--pearl-muted)',marginBottom:10}}>Marcos:</div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+          {[['default','Clásico'],['gold','Oro'],['ember','Brasa'],['neon','Neón'],['ice','Hielo']].map(([v,l])=>(
+            <button key={v} className={`chip ${ (profile?.cosmetic_frame||'default')===v?'chip-laca':''}`} style={{cursor:'pointer'}} onClick={()=>equipCosmetic(null,v)}>{l}</button>
+          ))}
+        </div>
+      </div>
+
+      <div className="glass" style={{padding:18,marginBottom:16}}>
+        <div className="eyebrow">Límites suaves, recarga natural</div>
+        <h3 style={{fontWeight:700,marginBottom:8}}>Juega sin sentirte ahorcado</h3>
+        <div style={{display:'grid',gap:8}}>
+          <div className="glass-dark" style={{padding:12,borderRadius:12,display:'flex',justifyContent:'space-between'}}><span>Likes hoy</span><span style={{color:'#F2C94C'}}>{likesLeft} / {likesLimit}</span></div>
+          <div className="glass-dark" style={{padding:12,borderRadius:12,display:'flex',justifyContent:'space-between'}}><span>Susurros hoy</span><span style={{color:'#F2C94C'}}>{whispersLeft} / {whisperLimit}</span></div>
+          <div className="glass-dark" style={{padding:12,borderRadius:12,display:'flex',justifyContent:'space-between'}}><span>Racha</span><span style={{color:'#F2C94C'}}>{profile?.streak_count||0} días</span></div>
+        </div>
+        <p style={{fontSize:'.8rem',color:'var(--pearl-muted)',marginTop:10,lineHeight:1.6}}>Los likes y susurros se recargan cada día. La Caja de la Calle puede darte extras. Premium no te quita la diversión: te da más margen.</p>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:10}}>
+          <button className="btn btn-glass btn-sm" onClick={saveStreak}>Salvar racha</button>
+          <a className="btn btn-glass btn-sm" href={waLink(`Hola, quiero comprar un pase en Palacalle. Mi ID: ${user?.id}. Nombre: ${profile?.display_name||''}. Me interesa: [Boost 24h 400 CUP / 3 Susurros extra 250 CUP / Salvavidas de chispa 200 CUP / Marco cosmético 300 CUP]`)} target="_blank" rel="noopener noreferrer">Pases y extras</a>
+        </div>
+      </div>
 
       <Beam size="md" colorVariant="mono" strength={0.4}>
       <div className="glass-strong" style={{padding:24,marginBottom:16}}>

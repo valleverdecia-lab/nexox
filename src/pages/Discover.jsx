@@ -22,6 +22,7 @@ function Card({ p, onLike, onPass, onReport }) {
         </div>
         <div style={{position:'relative',zIndex:1}}>
           <h2 style={{fontFamily:'var(--serif)',fontSize:'2.4rem',lineHeight:1,marginBottom:6}}>{p.display_name}{age?`, ${age}`:''}</h2>
+          {p.cosmetic_title && <div style={{marginBottom:6}}><span className="chip chip-laca" style={{fontSize:'.68rem'}}>{p.cosmetic_title}</span></div>}
           <p style={{color:'var(--pearl-dim)',fontSize:'.9rem'}}>{p.ciudad || p.country || 'Cerca de ti'} {p.distance_km!=null?`· ${distanceLabel(p.distance_km)}`:''}</p>
         </div>
       </div>
@@ -54,7 +55,7 @@ export default function Discover() {
     if(!user) return; setLoading(true);
     const { data: liked } = await supabase.from('likes').select('to_id').eq('from_id', user.id);
     const likedIds = new Set((liked||[]).map(x=>x.to_id));
-    let q = supabase.from('profiles').select('id,display_name,bio,country,ciudad,gender,birth_year,avatar_url,photos,last_active_at,lat,lng,verification_status,incognito').neq('id', user.id).eq('is_banned', false).eq('incognito', false).order('last_active_at',{ascending:false}).limit(30);
+    let q = supabase.from('profiles').select('id,display_name,bio,country,ciudad,gender,birth_year,avatar_url,photos,last_active_at,lat,lng,verification_status,incognito,cosmetic_title,cosmetic_frame').neq('id', user.id).eq('is_banned', false).eq('incognito', false).order('last_active_at',{ascending:false}).limit(30);
     const { data } = await q;
     const filtered = (data||[]).filter(p=>!likedIds.has(p.id));
     setPeople(filtered); setIdx(0); setLoading(false);
@@ -66,7 +67,7 @@ export default function Discover() {
   const act = async (p, like) => {
     if(like){
       const { error } = await supabase.from('likes').upsert({from_id:user.id,to_id:p.id});
-      if(error){ push('No se pudo dar like','err'); return; }
+      if(error){ if(String(error.message).includes('like_limit')) push('Llegaste a tu límite de likes de hoy. Se recargan mañana. Premium tiene likes ilimitados.','err'); else push('No se pudo dar like','err'); return; }
       setLastLike(p.id);
       const { data: mutual } = await supabase.from('likes').select('from_id').eq('from_id',p.id).eq('to_id',user.id).maybeSingle();
       if(mutual){
