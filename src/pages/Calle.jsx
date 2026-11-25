@@ -26,8 +26,14 @@ export default function Calle() {
   const [whisperBody, setWhisperBody] = useState('');
   const [dailyMatches, setDailyMatches] = useState([]);
   const [myDailyAnswer, setMyDailyAnswer] = useState('');
+  const [flash, setFlash] = useState(null);
+  const [flashCount, setFlashCount] = useState(0);
+  const [flashBody, setFlashBody] = useState('');
+  const [flashMine, setFlashMine] = useState(null);
+  const [tick, setTick] = useState(0);
 
   useEffect(()=>{ const t=setInterval(()=>setOpen(isBoardOpen()), 30000); return ()=>clearInterval(t); },[]);
+  useEffect(()=>{ const t=setInterval(()=>setTick(x=>x+1), 1000); return ()=>clearInterval(t); },[]);
 
   const loadDaily = async () => {
     const { data, error } = await supabase.rpc('daily_question_matches');
@@ -48,6 +54,15 @@ export default function Calle() {
     setActiveEvent(active);
     if(active){ const { count } = await supabase.from('posts').select('*',{count:'exact',head:true}).eq('event_slug', active.event_slug); setEventCount(count||0); }
     else setEventCount(0);
+    const now = new Date().toISOString();
+    const { data: fc } = await supabase.from('flash_challenges').select('*').eq('is_active',true).gt('ends_at', now).order('created_at',{ascending:false}).limit(1).maybeSingle();
+    setFlash(fc||null);
+    if(fc){
+      const { count } = await supabase.from('flash_submissions').select('*',{count:'exact',head:true}).eq('challenge_id', fc.id);
+      setFlashCount(count||0);
+      const { data: mine } = await supabase.from('flash_submissions').select('*').eq('challenge_id',fc.id).eq('user_id',user.id).maybeSingle();
+      setFlashMine(mine||null);
+    } else { setFlashCount(0); setFlashMine(null); }
     await loadDaily();
   };
   useEffect(()=>{ load(); },[event]);
@@ -89,6 +104,12 @@ export default function Calle() {
     else push(`Like enviado a ${p.display_name}`,'ok');
   };
 
+  const submitFlash = async () => {
+    if(!flash || !flashBody.trim()) return;
+    const { error } = await supabase.from('flash_submissions').upsert({ challenge_id: flash.id, user_id: user.id, body: flashBody.trim().slice(0,280) }, { onConflict:'challenge_id,user_id' });
+    if(error) push(error.message,'err'); else { push('Reto enviado. Estás en juego.','ok'); setFlashBody(''); load(); }
+  };
+
   return (
     <div className="page" style={{paddingTop:'calc(90px + var(--safe-top))'}}>
       <div className="topbar"><div className="topbar-inner"><div className="brand"><span className="brand-mark"><i/></span>Palacalle</div><span className={`chip ${open?'chip-live':''}`}>{open?'Abierta ahora':'Cerrada · 20:00–05:00'}</span></div></div>
@@ -110,6 +131,27 @@ export default function Calle() {
           </div>
         </Beam>
       )}
+
+      {flash && (()=>{ const left=Math.max(0, new Date(flash.ends_at).getTime()-Date.now()); const mm=Math.floor(left/60000); const ss=Math.floor((left%60000)/1000); return (
+        <Beam size="md" colorVariant="ember" strength={0.5}>
+          <div className="glass-strong" style={{padding:18,marginBottom:16,borderColor:'rgba(212,160,23,.35)'}}>
+            <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'center',flexWrap:'wrap',marginBottom:8}}>
+              <div><div className="eyebrow">Reto relámpago</div><h3 style={{fontWeight:800,fontSize:'1.1rem'}}>{flash.title||'Reto de la calle'}</h3></div>
+              <div style={{display:'flex',gap:8}}><span className="chip chip-live">{mm}:{String(ss).padStart(2,'0')}</span><span className="chip">{flashCount} dentro</span></div>
+            </div>
+            <p style={{color:'var(--pearl-dim)',lineHeight:1.6,marginBottom:12}}>{flash.prompt}</p>
+            {flash.reward_text && <div style={{fontSize:'.8rem',color:'#F2C94C',marginBottom:10}}>Recompensa: {flash.reward_text}</div>}
+            {flashMine ? (
+              <div className="glass-dark" style={{padding:12,borderRadius:12,fontSize:'.88rem',color:'var(--pearl-dim)'}}>Tu entrada: {flashMine.body}</div>
+            ) : left>0 ? (
+              <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                <input className="input" value={flashBody} onChange={e=>setFlashBody(e.target.value)} placeholder="Tu respuesta al reto..." />
+                <button className="btn btn-primary btn-sm" onClick={submitFlash}>Entrar al reto</button>
+              </div>
+            ) : <div style={{color:'var(--pearl-muted)',fontSize:'.86rem'}}>El reto terminó.</div>}
+          </div>
+        </Beam>
+      );})()}
 
       {dailyQ && (
         <div className="glass" style={{padding:18,marginBottom:16}}>

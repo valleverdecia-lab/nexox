@@ -38,6 +38,7 @@ export default function Calenton() {
     });
     if(error) throw error;
     setPeople(data||[]);
+    (data||[]).slice(0,10).forEach(p=>supabase.rpc('record_profile_view',{p_viewed:p.id}).catch(()=>{}));
   };
 
   const activate = async () => {

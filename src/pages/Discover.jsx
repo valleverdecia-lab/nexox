@@ -102,6 +102,7 @@ export default function Discover() {
   };
 
   const current = people[idx];
+  useEffect(()=>{ if(current?.id) supabase.rpc('record_profile_view',{p_viewed: current.id}).catch(()=>{}); },[current?.id]);
 
   return (
     <div className="page" style={{paddingTop:'calc(90px + var(--safe-top))'}}>

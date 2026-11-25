@@ -24,6 +24,10 @@ export default function Admin() {
  const [eventTitle, setEventTitle] = useState('');
  const [eventStart, setEventStart] = useState('');
  const [eventEnd, setEventEnd] = useState('');
+ const [flashTitle, setFlashTitle] = useState('');
+ const [flashPrompt, setFlashPrompt] = useState('');
+ const [flashMinutes, setFlashMinutes] = useState('15');
+ const [flashReward, setFlashReward] = useState('');
  const [inspect, setInspect] = useState(null);
  const [inspectMatches, setInspectMatches] = useState([]);
  const [inspectThread, setInspectThread] = useState([]);
@@ -79,6 +83,17 @@ export default function Admin() {
   if(error) { push(error.message,'err'); return; }
   await supabase.rpc('admin_notify_all', { p_title: `Evento: ${title}`, p_body: `Ya está activo. Entra a La Calle y participa.`, p_type:'event' });
   push('Evento creado y notificado','ok'); setEventTitle('');
+ };
+
+ const createFlash = async () => {
+  if(!flashPrompt.trim()) return push('Escribe el reto','err');
+  const mins = Math.max(5, Math.min(60, parseInt(flashMinutes||'15')));
+  const starts = new Date().toISOString();
+  const ends = new Date(Date.now()+mins*60000).toISOString();
+  const { error } = await supabase.from('flash_challenges').insert({ title: flashTitle.trim()||'Reto relámpago', prompt: flashPrompt.trim(), starts_at: starts, ends_at: ends, created_by:user.id, is_active:true, reward_text: flashReward.trim() });
+  if(error){ push(error.message,'err'); return; }
+  await supabase.rpc('admin_notify_all', { p_title: 'Reto relámpago en La Calle', p_body: flashTitle.trim()||'Tienes minutos para entrar.', p_type:'event' });
+  push('Reto relámpago lanzado','ok'); setFlashTitle(''); setFlashPrompt(''); setFlashReward('');
  };
 
  const openInspect = async (p) => {
@@ -155,6 +170,16 @@ export default function Admin() {
       <div className="field"><label>Fin</label><input className="input" type="datetime-local" value={eventEnd} onChange={e=>setEventEnd(e.target.value)} /></div>
      </div>
      <button className="btn btn-primary" onClick={scheduleEvent}>Crear y notificar</button>
+
+     <hr style={{border:'none',borderTop:'1px solid rgba(255,255,255,.08)',margin:'20px 0'}} />
+     <h3 style={{fontWeight:700,marginBottom:12}}>Reto relámpago (15 min)</h3>
+     <div className="field"><label>Título</label><input className="input" value={flashTitle} onChange={e=>setFlashTitle(e.target.value)} placeholder="Ej: Confiesa en 1 línea" /></div>
+     <div className="field"><label>Reto / prompt</label><textarea className="input" value={flashPrompt} onChange={e=>setFlashPrompt(e.target.value)} placeholder="¿Qué tiene que hacer la gente?" /></div>
+     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+      <div className="field"><label>Duración (min)</label><input className="input" type="number" value={flashMinutes} onChange={e=>setFlashMinutes(e.target.value)} /></div>
+      <div className="field"><label>Recompensa (texto)</label><input className="input" value={flashReward} onChange={e=>setFlashReward(e.target.value)} placeholder="Ej: destaque en La Calle" /></div>
+     </div>
+     <button className="btn btn-primary" onClick={createFlash}>Lanzar reto relámpago</button>
     </div>
    )}
 

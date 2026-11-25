@@ -20,6 +20,9 @@ export default function Profile() {
   const [voiceSec, setVoiceSec] = useState(0);
   const [uploadingVoice, setUploadingVoice] = useState(false);
   const voiceRecRef = useRef(null); const voiceChunksRef = useRef([]); const voiceTimerRef = useRef(null);
+  const [reward, setReward] = useState(null);
+  const [claimingReward, setClaimingReward] = useState(false);
+  const [viewsInfo, setViewsInfo] = useState({count:0,can_reveal:false,viewers:[]});
 
   useEffect(()=>{ if(profile) setForm({
     display_name:profile.display_name||'', bio:profile.bio||'', country:profile.country||'', ciudad:profile.ciudad||'',
@@ -28,6 +31,8 @@ export default function Profile() {
   }); },[profile]);
   useEffect(()=>{ (async()=>{ const { data } = await supabase.rpc('get_received_whispers'); setWhispers(data||[]); })(); },[user]);
   useEffect(()=>{ supabase.rpc('touch_streak').then(()=>refreshProfile()).catch(()=>{}); },[]);
+  const loadViews = async ()=>{ const { data } = await supabase.rpc('my_profile_views'); if(data) setViewsInfo(data); };
+  useEffect(()=>{ loadViews(); },[user?.id]);
 
   const PLANS = [
     { id:'1m', label:'1 mes', price:'1,500 CUP', per:'1,500 CUP/mes', save:'Acceso total', note:'Ideal para probar el fuego.' },
@@ -63,6 +68,17 @@ export default function Profile() {
   const requestVerification = async () => {
     const { error } = await supabase.from('verification_requests').insert({ user_id:user.id, selfie_url:'pending_selfie', status:'pending' });
     if(error) push(error.message,'err'); else { await supabase.from('profiles').update({verification_status:'pending'}).eq('id',user.id); push('Solicitud de verificación enviada','ok'); refreshProfile(); }
+  };
+
+  const claimReward = async () => {
+    setClaimingReward(true);
+    const { data, error } = await supabase.rpc('claim_daily_reward');
+    setClaimingReward(false);
+    if(error){ push(error.message,'err'); return; }
+    setReward(data);
+    if(data?.claimed) push('Ya abriste tu caja hoy. Vuelve mañana.','ok');
+    else push('Caja abierta. Premio aplicado.','ok');
+    refreshProfile(); loadViews();
   };
 
   const startVoice = async () => {
@@ -150,6 +166,37 @@ export default function Profile() {
         <button className="btn btn-glass btn-sm" onClick={requestVerification} disabled={profile?.verification_status==='pending'||profile?.verification_status==='verified'}>Pedir verificación</button>
         <button className="btn btn-glass btn-sm" onClick={async()=>{ const v=!profile?.incognito; const {error}=await supabase.from('profiles').update({incognito:v}).eq('id',user.id); if(error) push(error.message,'err'); else {push(v?'Modo incógnito activo':'Incógnito desactivado','ok'); refreshProfile();}}}>{profile?.incognito?'Desactivar incógnito':'Modo incógnito'}</button>
         <button className="btn btn-glass btn-sm" onClick={()=>{ navigator.clipboard?.writeText(window.location.origin+'/?ref='+ (profile?.id?.slice(0,8)||'')); push('Link de invitación copiado','ok'); }}>Invitar amigos</button>
+      </div>
+
+      <Beam size="md" colorVariant="sunset" strength={0.45}>
+      <div className="glass-strong" style={{padding:20,marginBottom:16}}>
+        <div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'center',flexWrap:'wrap'}}>
+          <div>
+            <div className="eyebrow">Caja de la Calle</div>
+            <h3 style={{fontWeight:700,marginBottom:6}}>Una recompensa diaria, sin trucos</h3>
+            <p style={{color:'var(--pearl-muted)',fontSize:'.86rem'}}>Abre tu caja cada día: boost, susurro extra, revelar visitas o foco radar. Gratis, una vez al día.</p>
+          </div>
+          <button className="btn btn-primary btn-sm" onClick={claimReward} disabled={claimingReward}>{claimingReward?'Abriendo...':'Abrir caja'}</button>
+        </div>
+        {reward && (
+          <div className="glass-dark" style={{marginTop:14,padding:14,borderRadius:14}}>
+            <div style={{fontWeight:700,color:'#F2C94C'}}>
+              {{boost_15m:'Boost 15 min activado',extra_whisper:'Susurro extra desbloqueado',reveal_views_1h:'Visitas reveladas por 1h',radar_spotlight:'Foco Radar 30 min activado'}[reward.reward_type] || 'Premio recibido'}
+            </div>
+            <div style={{fontSize:'.82rem',color:'var(--pearl-muted)',marginTop:4}}>{reward.claimed ? 'Ya reclamaste la caja de hoy.' : 'Se aplicó a tu cuenta al instante.'}</div>
+          </div>
+        )}
+      </div>
+      </Beam>
+
+      <div className="glass" style={{padding:18,marginBottom:16}}>
+        <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'center',flexWrap:'wrap',marginBottom:10}}>
+          <div><div className="eyebrow" style={{marginBottom:4}}>Visitas misteriosas</div><div style={{fontWeight:700}}>{viewsInfo.count||0} personas te miraron en 24h</div></div>
+          {!viewsInfo.can_reveal && <span className="chip">Revela con Premium o caja</span>}
+        </div>
+        {viewsInfo.can_reveal ? (
+          viewsInfo.viewers?.length ? <div style={{display:'grid',gap:8}}>{viewsInfo.viewers.map(v=>(<div key={v.id} className="glass-dark" style={{padding:10,borderRadius:12,display:'flex',justifyContent:'space-between'}}><span>{v.display_name}</span><span style={{color:'var(--pearl-muted)',fontSize:'.78rem'}}>{v.ciudad||v.country||'Cerca'}</span></div>))}</div> : <p style={{color:'var(--pearl-muted)',fontSize:'.86rem'}}>Aún no hay visitas nuevas. Activa tu perfil y vuelve.</p>
+        ) : <p style={{color:'var(--pearl-muted)',fontSize:'.86rem'}}>Alguien te está mirando. Abre la caja o activa Premium para ver quiénes fueron.</p>}
       </div>
 
       <div className="glass" style={{padding:18,marginBottom:16}}>
