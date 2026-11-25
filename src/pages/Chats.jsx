@@ -21,7 +21,13 @@ export default function Chats() {
   const [msgs, setMsgs] = useState([]);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(true);
+  const [recording, setRecording] = useState(false);
+  const [recSec, setRecSec] = useState(0);
+  const [sendingAudio, setSendingAudio] = useState(false);
   const endRef = useRef(null);
+  const mediaRef = useRef(null);
+  const chunksRef = useRef([]);
+  const timerRef = useRef(null);
 
   const loadMatches = async () => {
     if(!user) return;
@@ -43,15 +49,68 @@ export default function Chats() {
 
   useEffect(()=>{ loadMatches(); },[user]);
   useEffect(()=>{ if(!active) return; loadMsgs(active.id); const t=setInterval(()=>loadMsgs(active.id), 4000); return ()=>clearInterval(t); },[active?.id]);
+  useEffect(()=>()=>{ if(timerRef.current) clearInterval(timerRef.current); if(mediaRef.current?.state==='recording') mediaRef.current.stop(); },[]);
 
   const send = async (e, preset) => {
     e?.preventDefault?.();
     const body = (preset ?? text).trim();
     if(!body||!active) return;
     if(!preset) setText('');
-    const { error } = await supabase.from('messages').insert({ match_id: active.id, sender_id: user.id, body });
+    const { error } = await supabase.from('messages').insert({ match_id: active.id, sender_id: user.id, body, kind:'text' });
     if(error) { push('No se pudo enviar','err'); if(!preset) setText(body); }
-    else { setMsgs(m=>[...m,{id:Date.now(),match_id:active.id,sender_id:user.id,body,created_at:new Date().toISOString()}]); setTimeout(()=>endRef.current?.scrollIntoView({behavior:'smooth'}),50); }
+    else { setMsgs(m=>[...m,{id:Date.now(),match_id:active.id,sender_id:user.id,body,kind:'text',created_at:new Date().toISOString()}]); setTimeout(()=>endRef.current?.scrollIntoView({behavior:'smooth'}),50); }
+  };
+
+  const startRecording = async () => {
+    if(!active) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : (MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '');
+      const mr = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      chunksRef.current = [];
+      mr.ondataavailable = (ev)=>{ if(ev.data.size>0) chunksRef.current.push(ev.data); };
+      mr.onstop = async () => {
+        stream.getTracks().forEach(t=>t.stop());
+        if(timerRef.current) clearInterval(timerRef.current);
+        setRecording(false);
+        const blob = new Blob(chunksRef.current, { type: mr.mimeType || 'audio/webm' });
+        if(blob.size < 1000) { push('Nota de voz muy corta','err'); return; }
+        await sendAudio(blob, mr.mimeType || 'audio/webm');
+      };
+      mediaRef.current = mr;
+      mr.start();
+      setRecSec(0); setRecording(true);
+      timerRef.current = setInterval(()=>setRecSec(s=>s+1), 1000);
+    } catch (err) {
+      push('No pudimos acceder al micrófono','err');
+    }
+  };
+
+  const stopRecording = () => { if(mediaRef.current?.state==='recording') mediaRef.current.stop(); };
+  const cancelRecording = () => {
+    if(mediaRef.current) { mediaRef.current.onstop = () => { mediaRef.current?.stream?.getTracks?.().forEach(t=>t.stop()); }; if(mediaRef.current.state==='recording') mediaRef.current.stop(); }
+    if(timerRef.current) clearInterval(timerRef.current);
+    chunksRef.current=[]; setRecording(false); setRecSec(0);
+  };
+
+  const sendAudio = async (blob, mime) => {
+    if(!active) return;
+    setSendingAudio(true);
+    try {
+      const ext = mime.includes('ogg') ? 'ogg' : mime.includes('mp4') ? 'm4a' : 'webm';
+      const path = `${user.id}/chat/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('media').upload(path, blob, { contentType: mime, upsert: false });
+      if(upErr) throw upErr;
+      const { data: pub } = supabase.storage.from('media').getPublicUrl(path);
+      const audio_url = pub?.publicUrl || '';
+      const { error } = await supabase.from('messages').insert({ match_id: active.id, sender_id: user.id, body: 'Nota de voz', kind:'audio', audio_url });
+      if(error) throw error;
+      setMsgs(m=>[...m,{id:Date.now(),match_id:active.id,sender_id:user.id,body:'Nota de voz',kind:'audio',audio_url,created_at:new Date().toISOString()}]);
+      setTimeout(()=>endRef.current?.scrollIntoView({behavior:'smooth'}),50);
+      push('Nota de voz enviada','ok');
+    } catch (err) {
+      push(err.message || 'No se pudo enviar la nota de voz','err');
+    } finally { setSendingAudio(false); }
   };
 
   const reportActive = async () => {
@@ -70,7 +129,7 @@ export default function Chats() {
   };
 
   if(active) return (
-    <div className="page" style={{paddingTop:'calc(90px + var(--safe-top))',paddingBottom:'calc(140px + var(--safe-bot))'}}>
+    <div className="page" style={{paddingTop:'calc(90px + var(--safe-top))',paddingBottom:'calc(160px + var(--safe-bot))'}}>
       <div className="topbar"><div className="topbar-inner">
         <button className="btn btn-glass btn-sm" onClick={()=>setActive(null)}>Volver</button>
         <div style={{fontWeight:600}}>{active.other?.display_name||'Chat'}</div>
@@ -88,9 +147,15 @@ export default function Chats() {
           )}
           {msgs.map(m => {
             const mine = m.sender_id===user.id;
+            const isAudio = m.kind==='audio' && m.audio_url;
             return <div key={m.id} style={{display:'flex',justifyContent:mine?'flex-end':'flex-start'}}>
               <div className={mine?'':'glass'} style={{maxWidth:'78%',padding:'12px 14px',borderRadius:mine?'20px 20px 6px 20px':'20px 20px 20px 6px',background:mine?'linear-gradient(135deg,#D4A017,#E5B829)':'',color:mine?'#111':'var(--pearl)',boxShadow:mine?'0 10px 30px rgba(212,160,23,.25)':'none'}}>
-                <div style={{lineHeight:1.6,fontSize:'.94rem',whiteSpace:'pre-wrap'}}>{m.body}</div>
+                {isAudio ? (
+                  <div>
+                    <div style={{fontSize:'.78rem',fontWeight:700,marginBottom:6}}>Nota de voz</div>
+                    <audio controls preload="none" src={m.audio_url} style={{width:'min(260px,60vw)',height:36}} />
+                  </div>
+                ) : <div style={{lineHeight:1.6,fontSize:'.94rem',whiteSpace:'pre-wrap'}}>{m.body}</div>}
                 <div style={{fontSize:'.68rem',opacity:.7,marginTop:6}}>{timeAgo(m.created_at)}</div>
               </div>
             </div>;
@@ -98,12 +163,26 @@ export default function Chats() {
           <div ref={endRef}/>
         </div>
       </div>
-      <form onSubmit={send} style={{position:'fixed',left:0,right:0,bottom:'calc(84px + var(--safe-bot))',padding:'0 16px',zIndex:80}}>
-        <div className="glass" style={{maxWidth:720,margin:'0 auto',padding:8,display:'flex',gap:8,borderRadius:20}}>
-          <input className="input" style={{flex:1,margin:0,background:'transparent',border:'none',boxShadow:'none'}} value={text} onChange={e=>setText(e.target.value)} placeholder="Escribe algo que valga la pena..." />
-          <button className="btn btn-primary btn-sm">Enviar</button>
+      <div style={{position:'fixed',left:0,right:0,bottom:'calc(84px + var(--safe-bot))',padding:'0 16px',zIndex:80}}>
+        <div className="glass" style={{maxWidth:720,margin:'0 auto',padding:8,display:'flex',gap:8,borderRadius:20,alignItems:'center'}}>
+          {recording ? (
+            <>
+              <div style={{flex:1,display:'flex',alignItems:'center',gap:10,padding:'0 8px'}}>
+                <span style={{width:10,height:10,borderRadius:999,background:'#E05353',display:'inline-block',animation:'pulse 1s infinite'}}></span>
+                <span style={{fontWeight:600}}>Grabando {recSec}s</span>
+              </div>
+              <button type="button" className="btn btn-glass btn-sm" onClick={cancelRecording}>Cancelar</button>
+              <button type="button" className="btn btn-primary btn-sm" onClick={stopRecording}>Enviar voz</button>
+            </>
+          ) : (
+            <form onSubmit={send} style={{display:'flex',gap:8,width:'100%',alignItems:'center'}}>
+              <button type="button" className="btn btn-glass btn-sm" onClick={startRecording} disabled={sendingAudio} title="Nota de voz" style={{minWidth:44,display:'grid',placeItems:'center'}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0"/><path d="M12 18v4M8 22h8"/></svg></button>
+              <input className="input" style={{flex:1,margin:0,background:'transparent',border:'none',boxShadow:'none'}} value={text} onChange={e=>setText(e.target.value)} placeholder={sendingAudio?'Enviando nota de voz...':'Escribe algo que valga la pena...'} />
+              <button className="btn btn-primary btn-sm" disabled={sendingAudio}>Enviar</button>
+            </form>
+          )}
         </div>
-      </form>
+      </div>
     </div>
   );
 

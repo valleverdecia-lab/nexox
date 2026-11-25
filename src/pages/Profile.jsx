@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -16,6 +16,10 @@ export default function Profile() {
   const [planIdx, setPlanIdx] = useState(1);
   const [likedMe, setLikedMe] = useState([]);
   const [showLiked, setShowLiked] = useState(false);
+  const [recordingVoice, setRecordingVoice] = useState(false);
+  const [voiceSec, setVoiceSec] = useState(0);
+  const [uploadingVoice, setUploadingVoice] = useState(false);
+  const voiceRecRef = useRef(null); const voiceChunksRef = useRef([]); const voiceTimerRef = useRef(null);
 
   useEffect(()=>{ if(profile) setForm({
     display_name:profile.display_name||'', bio:profile.bio||'', country:profile.country||'', ciudad:profile.ciudad||'',
@@ -60,6 +64,40 @@ export default function Profile() {
     const { error } = await supabase.from('verification_requests').insert({ user_id:user.id, selfie_url:'pending_selfie', status:'pending' });
     if(error) push(error.message,'err'); else { await supabase.from('profiles').update({verification_status:'pending'}).eq('id',user.id); push('Solicitud de verificación enviada','ok'); refreshProfile(); }
   };
+
+  const startVoice = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+      const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : (MediaRecorder.isTypeSupported('audio/webm')?'audio/webm':'');
+      const mr = new MediaRecorder(stream, mime?{mimeType:mime}:undefined);
+      voiceChunksRef.current=[];
+      mr.ondataavailable = (e)=>{ if(e.data.size>0) voiceChunksRef.current.push(e.data); };
+      mr.onstop = async () => {
+        stream.getTracks().forEach(t=>t.stop());
+        if(voiceTimerRef.current) clearInterval(voiceTimerRef.current);
+        setRecordingVoice(false);
+        const blob = new Blob(voiceChunksRef.current, {type: mr.mimeType||'audio/webm'});
+        if(blob.size<1000) return push('Nota de voz muy corta','err');
+        setUploadingVoice(true);
+        try {
+          const ext = (mr.mimeType||'').includes('ogg')?'ogg':(mr.mimeType||'').includes('mp4')?'m4a':'webm';
+          const path = `${user.id}/voice/intro-${Date.now()}.${ext}`;
+          const { error: upErr } = await supabase.storage.from('media').upload(path, blob, {contentType: mr.mimeType||'audio/webm', upsert:true});
+          if(upErr) throw upErr;
+          const { data:pub } = supabase.storage.from('media').getPublicUrl(path);
+          const url = pub?.publicUrl||'';
+          const { error } = await supabase.from('profiles').update({ voice_intro_url:url, voice_url:url }).eq('id', user.id);
+          if(error) throw error;
+          push('Voz del Malecón guardada','ok'); refreshProfile();
+        } catch(err){ push(err.message||'No se pudo guardar la voz','err'); }
+        finally { setUploadingVoice(false); }
+      };
+      voiceRecRef.current=mr; mr.start(); setVoiceSec(0); setRecordingVoice(true);
+      voiceTimerRef.current=setInterval(()=>setVoiceSec(s=>s+1),1000);
+    } catch { push('No pudimos acceder al micrófono','err'); }
+  };
+  const stopVoice = ()=>{ if(voiceRecRef.current?.state==='recording') voiceRecRef.current.stop(); };
+  const cancelVoice = ()=>{ try{ if(voiceRecRef.current?.state==='recording'){ voiceRecRef.current.onstop=()=>voiceRecRef.current?.stream?.getTracks?.().forEach(t=>t.stop()); voiceRecRef.current.stop(); } }catch{} if(voiceTimerRef.current) clearInterval(voiceTimerRef.current); setRecordingVoice(false); setVoiceSec(0); };
 
   const checklist = [
     ['Foto de perfil', !!profile?.avatar_url],
@@ -123,6 +161,22 @@ export default function Profile() {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="glass" style={{padding:18,marginBottom:16}}>
+        <div className="eyebrow">Voz del Malecón</div>
+        <h3 style={{fontWeight:700,marginBottom:8}}>Tu voz vende más que mil fotos</h3>
+        <p style={{color:'var(--pearl-muted)',fontSize:'.86rem',marginBottom:12}}>Graba una nota corta para tu perfil. La gente en el radar y tu perfil podrán escucharte.</p>
+        {(profile?.voice_intro_url||profile?.voice_url) && <audio controls src={profile.voice_intro_url||profile.voice_url} style={{width:'100%',marginBottom:12}} />}
+        {recordingVoice ? (
+          <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+            <span className="chip chip-live">Grabando {voiceSec}s</span>
+            <button className="btn btn-glass btn-sm" type="button" onClick={cancelVoice}>Cancelar</button>
+            <button className="btn btn-primary btn-sm" type="button" onClick={stopVoice}>Guardar voz</button>
+          </div>
+        ) : (
+          <button className="btn btn-glass btn-sm" type="button" onClick={startVoice} disabled={uploadingVoice}>{uploadingVoice?'Subiendo...':(profile?.voice_intro_url||profile?.voice_url)?'Grabar de nuevo':'Grabar mi voz'}</button>
+        )}
       </div>
 
       <Beam size="md" colorVariant="ocean" strength={0.35}>
