@@ -1,9 +1,9 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { ageFromYear, distanceLabel, initials } from '../lib/helpers';
+import { ageFromYear, distanceLabel, initials, getAutoEvent } from '../lib/helpers';
 import Beam from '../components/Beam';
 
 function Card({ p, onLike, onPass, onReport }) {
@@ -48,13 +48,40 @@ export default function Discover() {
   const [form, setForm] = useState({display_name:'', bio:'', country:'', ciudad:'', gender:'', seeking:'', birth_year:''});
   const [lastLike, setLastLike] = useState(null);
   const [topPicks, setTopPicks] = useState([]);
+  const [blindMode, setBlindMode] = useState(null);
+  const [blindCards, setBlindCards] = useState([]);
+  const [myBlind, setMyBlind] = useState(null);
+  const [blindText, setBlindText] = useState('');
+  const [blindRecording, setBlindRecording] = useState(false);
+  const [blindSec, setBlindSec] = useState(0);
+  const blindRecRef = useRef(null); const blindChunksRef = useRef([]); const blindTimerRef = useRef(null); const blindMaxRef = useRef(null);
 
   useEffect(()=>{ if(profile){ setForm({display_name:profile.display_name||'',bio:profile.bio||'',country:profile.country||'',ciudad:profile.ciudad||'',gender:profile.gender||'',seeking:profile.seeking||'',birth_year:profile.birth_year||''}); if(!profile.onboarding_done) setEditing(true); } },[profile]);
 
   const load = useCallback(async () => {
     if(!user) return; setLoading(true);
+    const nowIso = new Date().toISOString();
+    const { data: ev } = await supabase.from('event_schedule').select('*').eq('is_active',true).lte('starts_at',nowIso).order('created_at',{ascending:false}).limit(5);
+    const override = (ev||[]).find(e=>!e.ends_at || e.ends_at>=nowIso) || null;
+    const auto = getAutoEvent();
+    const mode = override?.event_slug || auto.slug;
+    const isBlind = (mode==='voz_ciega' || mode==='confesion_ciega');
+    setBlindMode(isBlind ? mode : null);
+
     const { data: liked } = await supabase.from('likes').select('to_id').eq('from_id', user.id);
     const likedIds = new Set((liked||[]).map(x=>x.to_id));
+
+    if(isBlind){
+      const today = new Date().toISOString().slice(0,10);
+      const { data: cards } = await supabase.from('blind_cards').select('*').eq('mode',mode).eq('active_date',today).neq('user_id',user.id).order('created_at',{ascending:false}).limit(40);
+      const filtered = (cards||[]).filter(c=>!likedIds.has(c.user_id));
+      setBlindCards(filtered);
+      const { data: mine } = await supabase.from('blind_cards').select('*').eq('mode',mode).eq('active_date',today).eq('user_id',user.id).maybeSingle();
+      setMyBlind(mine||null);
+      setPeople([]); setIdx(0); setLoading(false);
+      return;
+    }
+
     let q = supabase.from('profiles').select('id,display_name,bio,country,ciudad,gender,birth_year,avatar_url,photos,last_active_at,lat,lng,verification_status,incognito,cosmetic_title,cosmetic_frame').neq('id', user.id).eq('is_banned', false).eq('incognito', false).order('last_active_at',{ascending:false}).limit(30);
     const { data } = await q;
     const filtered = (data||[]).filter(p=>!likedIds.has(p.id));
@@ -102,6 +129,48 @@ export default function Discover() {
     if(error) push(error.message,'err'); else { push('Perfil listo. Ahora sí, a la calle.','ok'); setEditing(false); refreshProfile(); load(); }
   };
 
+  const submitBlindText = async () => {
+    if(!blindText.trim() || !blindMode) return;
+    const today = new Date().toISOString().slice(0,10);
+    const { error } = await supabase.from('blind_cards').upsert({ user_id:user.id, mode:blindMode, body:blindText.trim().slice(0,280), audio_url:'', active_date:today }, { onConflict:'user_id,mode,active_date' });
+    if(error) push(error.message,'err'); else { push('Tu confesión ciega está en juego','ok'); setBlindText(''); load(); }
+  };
+  const startBlindRec = async () => {
+    try{
+      const stream = await navigator.mediaDevices.getUserMedia({ audio:{echoCancellation:true,noiseSuppression:true} });
+      const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm';
+      const mr = new MediaRecorder(stream, {mimeType:mime,audioBitsPerSecond:24000});
+      blindChunksRef.current=[];
+      mr.ondataavailable=e=>{ if(e.data.size>0) blindChunksRef.current.push(e.data); };
+      mr.onstop = async ()=>{
+        stream.getTracks().forEach(t=>t.stop()); clearInterval(blindTimerRef.current); clearTimeout(blindMaxRef.current); setBlindRecording(false);
+        const blob = new Blob(blindChunksRef.current,{type:mr.mimeType||'audio/webm'});
+        if(blob.size<1000) return push('Audio muy corto','err');
+        const path = `${user.id}/blind/${Date.now()}.webm`;
+        const { error: upErr } = await supabase.storage.from('media').upload(path, blob, {contentType:mr.mimeType||'audio/webm', upsert:false});
+        if(upErr){ push(upErr.message,'err'); return; }
+        const { data:pub } = supabase.storage.from('media').getPublicUrl(path);
+        const today = new Date().toISOString().slice(0,10);
+        const { error } = await supabase.from('blind_cards').upsert({ user_id:user.id, mode:blindMode, body:'Voz ciega', audio_url:pub?.publicUrl||'', active_date:today }, { onConflict:'user_id,mode,active_date' });
+        if(error) push(error.message,'err'); else { push('Tu voz ciega está en juego','ok'); load(); }
+      };
+      blindRecRef.current=mr; mr.start(250); setBlindSec(0); setBlindRecording(true);
+      blindTimerRef.current=setInterval(()=>setBlindSec(s=>s+1),1000);
+      blindMaxRef.current=setTimeout(()=>{ if(blindRecRef.current?.state==='recording') blindRecRef.current.stop(); }, 10000);
+    }catch{ push('No pudimos acceder al micrófono','err'); }
+  };
+  const stopBlindRec = ()=>{ if(blindRecRef.current?.state==='recording') blindRecRef.current.stop(); };
+  const actBlind = async (card, like) => {
+    if(like){
+      const { error } = await supabase.from('likes').upsert({from_id:user.id,to_id:card.user_id});
+      if(error){ push(String(error.message).includes('like_limit')?'Límite de likes de hoy. Se recargan mañana.':'No se pudo dar like','err'); return; }
+      const { data: mutual } = await supabase.from('likes').select('from_id').eq('from_id',card.user_id).eq('to_id',user.id).maybeSingle();
+      if(mutual) push('¡Match ciego! Ahora pueden verse en chats.','laca');
+      else push('Like enviado a esa vibra','ok');
+    }
+    setIdx(i=>i+1);
+  };
+
   const current = people[idx];
   useEffect(()=>{ if(current?.id) supabase.rpc('record_profile_view',{p_viewed: current.id}).catch(()=>{}); },[current?.id]);
 
@@ -119,13 +188,14 @@ export default function Discover() {
 
       <div className="page-header">
         <div>
-          <div className="eyebrow">Descubrir</div>
-          <h1 className="h2">Personas que <span style={{fontStyle:'italic',color:'#F2C94C'}}>valen la pena</span></h1>
+          <div className="eyebrow">{blindMode ? 'Modo especial' : 'Descubrir'}</div>
+          <h1 className="h2">{blindMode==='voz_ciega' ? <>Voz <span style={{fontStyle:'italic',color:'#F2C94C'}}>Ciega</span></> : blindMode==='confesion_ciega' ? <>Confesión <span style={{fontStyle:'italic',color:'#F2C94C'}}>Ciega</span></> : <>Personas que <span style={{fontStyle:'italic',color:'#F2C94C'}}>valen la pena</span></>}</h1>
+          {blindMode && <p className="sub" style={{marginTop:8}}>{blindMode==='voz_ciega'?'Hoy los matches nacen de una voz de 10s. Sin foto, solo vibra.':'Hoy ligas por lo que confiesas. El perfil se revela después del match.'}</p>}
         </div>
-        <span className="chip">{Math.max(0,people.length-idx)} por ver</span>
+        <span className="chip">{blindMode ? `${Math.max(0,blindCards.length-idx)} por ver` : `${Math.max(0,people.length-idx)} por ver`}</span>
       </div>
 
-      {topPicks.length>0 && (
+      {!blindMode && topPicks.length>0 && (
         <div className="glass" style={{padding:14,marginBottom:16}}>
           <div className="eyebrow" style={{marginBottom:8}}>Top Picks de hoy</div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:10}}>
@@ -162,6 +232,43 @@ export default function Discover() {
       )}
 
       {loading ? <div className="glass" style={{height:520,maxWidth:520,margin:'0 auto'}}><div className="skeleton" style={{height:'100%'}}/></div>
+      : blindMode ? (
+        <div style={{maxWidth:560,margin:'0 auto',display:'grid',gap:14}}>
+          <div className="glass-strong" style={{padding:20}}>
+            <div className="eyebrow">{blindMode==='voz_ciega'?'Tu voz de 10s':'Tu confesión ciega'}</div>
+            <p style={{color:'var(--pearl-muted)',fontSize:'.86rem',marginBottom:12}}>{myBlind ? 'Ya estás en juego. Puedes actualizar tu carta ciega.' : 'Para jugar, deja tu carta ciega. Nadie ve tu perfil hasta que haya match.'}</p>
+            {blindMode==='confesion_ciega' ? (
+              <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                <input className="input" value={blindText} onChange={e=>setBlindText(e.target.value)} placeholder="Escribe tu confesión..." maxLength={280} />
+                <button className="btn btn-primary btn-sm" onClick={submitBlindText}>{myBlind?'Actualizar':'Publicar'}</button>
+              </div>
+            ) : (
+              <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+                {myBlind?.audio_url && <audio controls src={myBlind.audio_url} style={{height:34}} />}
+                {blindRecording ? <>
+                  <span className="chip chip-live">Grabando {blindSec}s / 10s</span>
+                  <button className="btn btn-primary btn-sm" onClick={stopBlindRec}>Parar</button>
+                </> : <button className="btn btn-primary btn-sm" onClick={startBlindRec}>{myBlind?'Grabar de nuevo':'Grabar 10s'}</button>}
+              </div>
+            )}
+          </div>
+          {blindCards[idx] ? (
+            <div className="glass-strong" style={{padding:24,borderRadius:28}}>
+              <div className="eyebrow">{blindMode==='voz_ciega'?'Voz misteriosa':'Confesión anónima'}</div>
+              <div style={{minHeight:140,display:'grid',placeItems:'center',padding:'20px 0'}}>
+                {blindMode==='voz_ciega' ? (
+                  blindCards[idx].audio_url ? <audio controls src={blindCards[idx].audio_url} style={{width:'100%'}} /> : <p style={{color:'var(--pearl-muted)'}}>Audio no disponible</p>
+                ) : <p style={{fontSize:'1.15rem',lineHeight:1.7,textAlign:'center',color:'var(--pearl-dim)'}}>"{blindCards[idx].body}"</p>}
+              </div>
+              <div style={{display:'flex',gap:12,justifyContent:'center'}}>
+                <button className="btn btn-glass btn-icon" onClick={()=>actBlind(blindCards[idx],false)} aria-label="Pasar" style={{width:60,height:60}}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+                <button className="btn btn-primary btn-icon" onClick={()=>actBlind(blindCards[idx],true)} aria-label="Me gusta" style={{width:68,height:68}}><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 21s-7-4.4-9.3-9A5.5 5.5 0 0 1 12 5.7 5.5 5.5 0 0 1 21.3 12c-2.3 4.6-9.3 9-9.3 9z"/></svg></button>
+              </div>
+              <p style={{textAlign:'center',fontSize:'.76rem',color:'var(--pearl-muted)',marginTop:12}}>El perfil se revela solo si hay match.</p>
+            </div>
+          ) : <div className="glass empty"><p>No hay más cartas ciegas ahora. Vuelve en un rato.</p></div>}
+        </div>
+      )
       : current ? <AnimatePresence mode="wait"><Card key={current.id} p={current} onLike={(p)=>act(p,true)} onPass={(p)=>act(p,false)} onReport={reportUser} /></AnimatePresence>
       : <Beam size="md" colorVariant="mono" strength={0.4}><div className="glass empty" style={{maxWidth:520,margin:'0 auto'}}><div className="empty-icon" style={{fontSize:'2rem',marginBottom:12,color:'#D4A017'}}>●</div><h3 className="h2" style={{fontSize:'1.8rem',marginBottom:8}}>La calle está tranquila</h3><p>No hay más perfiles por ahora. Vuelve en un rato o invita a alguien a Palacalle.</p><button className="btn btn-primary" style={{marginTop:18}} onClick={load}>Recargar</button></div></Beam>}
     </div>

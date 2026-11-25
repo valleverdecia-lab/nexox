@@ -13,6 +13,8 @@ export const EVENTS = [
  { slug:'susurros', title:'Susurros Misteriosos', color:'#F2C94C', desc:'El primero que descubra el mensaje oculto del admin se gana 1000 pesos.' },
  { slug:'miradas', title:'Miradas Perdidas', color:'#B88914', desc:'Cruces de miradas virtuales: quién te llamó la atención hoy.' },
  { slug:'reto', title:'Reto de Medianoche', color:'#E5B829', desc:'Un reto atrevido cada noche. ¿Te atreves?' },
+ { slug:'voz_ciega', title:'Voz Ciega', color:'#D4A017', desc:'Hoy los matches nacen de una voz de 10 segundos. Sin foto, solo vibra.' },
+ { slug:'confesion_ciega', title:'Confesión Ciega', color:'#B88914', desc:'Hoy ligas por lo que confiesas. El perfil se revela después del match.' },
 ];
 
 export const DESIRE_GIFTS = [

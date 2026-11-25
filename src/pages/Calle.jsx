@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { timeAgo, isBoardOpen, boardWindowLabel, initials } from '../lib/helpers';
+import { timeAgo, isBoardOpen, boardWindowLabel, initials, getAutoEvent } from '../lib/helpers';
 import { EVENTS } from '../lib/config';
 import Beam from '../components/Beam';
 
@@ -50,10 +50,13 @@ export default function Calle() {
     setPosts(data||[]);
     const nowIso = new Date().toISOString();
     const { data: ev } = await supabase.from('event_schedule').select('*').eq('is_active',true).lte('starts_at', nowIso).order('created_at',{ascending:false}).limit(5);
-    const active = (ev||[]).find(e=>!e.ends_at || e.ends_at>=nowIso) || (ev||[])[0] || null;
+    const override = (ev||[]).find(e=>!e.ends_at || e.ends_at>=nowIso) || null;
+    const auto = getAutoEvent();
+    const active = override || { event_slug: auto.slug, title: auto.title, banner_text: auto.desc, _auto:true };
     setActiveEvent(active);
-    if(active){ const { count } = await supabase.from('posts').select('*',{count:'exact',head:true}).eq('event_slug', active.event_slug); setEventCount(count||0); }
-    else setEventCount(0);
+    setEvent(active.event_slug);
+    const { count } = await supabase.from('posts').select('*',{count:'exact',head:true}).eq('event_slug', active.event_slug);
+    setEventCount(count||0);
     const now = new Date().toISOString();
     const { data: fc } = await supabase.from('flash_challenges').select('*').eq('is_active',true).gt('ends_at', now).order('created_at',{ascending:false}).limit(1).maybeSingle();
     setFlash(fc||null);
@@ -126,7 +129,7 @@ export default function Calle() {
         <Beam size="sm" colorVariant="sunset" strength={0.6}>
           <div className="glass-strong" style={{padding:16,marginBottom:16,display:'flex',gap:12,alignItems:'center',flexWrap:'wrap'}}>
             <span style={{width:10,height:10,borderRadius:999,background:"var(--laca)",boxShadow:"0 0 0 6px rgba(212,160,23,.18)",flexShrink:0}}></span>
-            <div style={{flex:1}}><div style={{fontWeight:700}}>Evento activo: {activeEvent.title}</div><div style={{color:'var(--pearl-dim)',fontSize:'.85rem'}}>{activeEvent.banner_text||'Entra y deja tu huella esta noche.'}</div></div>
+            <div style={{flex:1}}><div style={{fontWeight:700}}>{activeEvent._auto?'Modo de calle':'Evento activo'}: {activeEvent.title}</div><div style={{color:'var(--pearl-dim)',fontSize:'.85rem'}}>{activeEvent.banner_text||'Entra y deja tu huella esta noche.'}{activeEvent._auto?' · Cambia cada 2 días.':''}</div></div>
             <span className="chip chip-laca">{eventCount} dentro</span>
           </div>
         </Beam>
@@ -197,9 +200,16 @@ export default function Calle() {
         </div>
       )}
 
-      <div style={{display:'flex',gap:8,overflowX:'auto',paddingBottom:8,marginBottom:14}}>
-        <button className={`chip ${event==='todos'?'chip-laca':''}`} onClick={()=>setEvent('todos')}>Todos</button>
-        {EVENTS.map(ev => <button key={ev.slug} className={`chip ${event===ev.slug?'chip-laca':''}`} onClick={()=>setEvent(ev.slug)}>{ev.title}</button>)}
+      <div className="glass" style={{padding:14,marginBottom:14,display:'flex',justifyContent:'space-between',gap:10,alignItems:'center',flexWrap:'wrap'}}>
+        <div>
+          <div style={{fontSize:'.72rem',color:'var(--pearl-muted)',textTransform:'uppercase',letterSpacing:'.08em'}}>Modo activo de la calle</div>
+          <div style={{fontWeight:700,color:'#F2C94C'}}>{activeEvent?.title||'Modo'}</div>
+          <div style={{fontSize:'.78rem',color:'var(--pearl-muted)'}}>{activeEvent?._auto ? 'Rota automáticamente cada 2 días' : 'Activado por el admin'}</div>
+        </div>
+        <div style={{display:'flex',gap:8}}>
+          <button className={`chip ${event===activeEvent?.event_slug?'chip-laca':''}`} onClick={()=>setEvent(activeEvent?.event_slug||'todos')}>Modo activo</button>
+          <button className={`chip ${event==='todos'?'chip-laca':''}`} onClick={()=>setEvent('todos')}>Ver todo</button>
+        </div>
       </div>
 
       <form className="glass" style={{padding:16,marginBottom:18}} onSubmit={publish}>

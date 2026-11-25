@@ -234,9 +234,9 @@ export default function Chats() {
               </>
             ) : (
               <form onSubmit={send} style={{display:'flex',gap:8,width:'100%',alignItems:'center'}}>
-                <button type="button" className="btn btn-glass btn-sm" onClick={()=>setGiftOpen(true)} disabled={sp.dead} title="Regalo de deseo" style={{minWidth:44,display:'grid',placeItems:'center'}}>✦</button>
-                <button type="button" className="btn btn-glass btn-sm" onClick={startRecording} disabled={sendingAudio || sp.dead} title="Nota de voz" style={{minWidth:44,display:'grid',placeItems:'center'}}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0"/><path d="M12 18v4M8 22h8"/></svg>
+                <button type="button" className="btn btn-glass btn-sm" onClick={()=>setGiftOpen(true)} disabled={sp.dead} title="Regalo de deseo" style={{minWidth:44,padding:'8px 10px',fontSize:'.72rem'}}>Regalo</button>
+                <button type="button" className="btn btn-glass btn-sm" onClick={startRecording} disabled={sendingAudio || sp.dead} title="Nota de voz" style={{minWidth:44,padding:'8px 10px',display:'flex',gap:4,alignItems:'center',fontSize:'.72rem'}}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0"/><path d="M12 18v4M8 22h8"/></svg> Voz
                 </button>
                 <input className="input" style={{flex:1,margin:0,background:'transparent',border:'none',boxShadow:'none'}} value={text} onChange={e=>setText(e.target.value)} placeholder={sp.dead?'La chispa expiró':(sendingAudio?'Enviando nota de voz...':'Mensaje efímero...')} disabled={sp.dead} />
                 <button className="btn btn-primary btn-sm" disabled={sendingAudio || sp.dead}>Enviar</button>

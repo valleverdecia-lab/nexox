@@ -1,5 +1,9 @@
-import { WHATSAPP_NUMBER } from './config';
+import { WHATSAPP_NUMBER, EVENTS } from './config';
 export const uid = () => Math.random().toString(36).slice(2,10);
+export const getAutoEvent = (d=new Date()) => {
+  const dayIndex = Math.floor(Math.floor(d.getTime()/86400000) / 2);
+  return EVENTS[dayIndex % EVENTS.length];
+};
 export const fmtDate = (iso) => { if(!iso) return ''; const d=new Date(iso); return d.toLocaleDateString('es-ES',{day:'2-digit',month:'short'}); };
 export const fmtTime = (iso) => { if(!iso) return ''; const d=new Date(iso); return d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}); };
 export const timeAgo = (iso) => {

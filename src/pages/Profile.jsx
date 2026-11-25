@@ -179,6 +179,15 @@ export default function Profile() {
         </div>
       </div>
 
+      <div className="glass" style={{padding:18,marginBottom:16}}>
+        <div className="eyebrow">Todo lo que puedes hacer</div>
+        <div style={{display:'grid',gap:8}}>
+          {[['Voz en chats','En un chat, toca “Voz”, graba hasta 60s y suelta para enviar. También tienes Voz del Malecón en tu perfil.'],['Regalos de Lujuria','En chat toca “Regalo” para enviar Miradas, Suspiros o packs premium.'],['Caja diaria','Abre tu Caja de la Calle 1 vez al día: premios reales gratis.'],['Radar Calentón','Activa ubicación, filtra por intención/distancia y ponte “Disponible 30 min”.'],['La Calle','Publica de 20:00–05:00, responde la Pregunta del Día y entra a Afinidad.'],['Modos ciegos','Cuando toque Voz Ciega o Confesión Ciega, ligas sin ver perfil hasta el match.']].map(([t,d])=>(
+            <div key={t} className="glass-dark" style={{padding:12,borderRadius:12}}><div style={{fontWeight:700,fontSize:'.86rem',color:'#F2C94C'}}>{t}</div><div style={{fontSize:'.8rem',color:'var(--pearl-muted)',lineHeight:1.5}}>{d}</div></div>
+          ))}
+        </div>
+      </div>
+
       <div className="glass" style={{padding:18,marginBottom:16,display:'flex',gap:10,flexWrap:'wrap'}}>
         <button className="btn btn-glass btn-sm" onClick={loadLikedMe}>Quién me dio like</button>
         <button className="btn btn-glass btn-sm" onClick={requestVerification} disabled={profile?.verification_status==='pending'||profile?.verification_status==='verified'}>Pedir verificación</button>

@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { timeAgo } from '../lib/helpers';
 import { EVENTS } from '../lib/config';
+import { getAutoEvent } from '../lib/helpers';
 import Beam from '../components/Beam';
 
 const Ico = ({d,s=18}) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={d}/></svg>;
@@ -84,6 +85,17 @@ export default function Admin() {
   const today = new Date().toISOString().slice(0,10);
   const { error } = await supabase.from('daily_questions').insert({ question: dailyQ.trim(), active_date: today, created_by: user.id });
   if(error) push(error.message,'err'); else { push('Pregunta del día publicada','ok'); setDailyQ(''); }
+ };
+
+ const activateModeNow = async (slug) => {
+  const ev = EVENTS.find(e=>e.slug===slug); if(!ev) return;
+  const starts = new Date().toISOString();
+  const ends = new Date(Date.now()+2*24*60*60*1000).toISOString();
+  await supabase.from('event_schedule').update({is_active:false}).eq('is_active',true).lt('starts_at', starts);
+  const { error } = await supabase.from('event_schedule').insert({ event_slug:slug, title:ev.title, scheduled_for: starts.slice(0,10), starts_at: starts, ends_at: ends, is_active:true, created_by:user.id, banner_text: ev.desc });
+  if(error){ push(error.message,'err'); return; }
+  await supabase.rpc('admin_notify_all', { p_title: `Modo de Calle: ${ev.title}`, p_body: 'El admin cambió el modo activo. Entra a La Calle.', p_type:'event' });
+  push(`${ev.title} activado ahora`,'ok');
  };
 
  const scheduleEvent = async () => {
@@ -177,6 +189,17 @@ export default function Admin() {
 
    {tab==='events' && (
     <div className="glass" style={{padding:20,marginBottom:16}}>
+     <h3 style={{fontWeight:700,marginBottom:12}}>Modos de La Calle (1 activo, rota cada 2 días)</h3>
+     <p style={{color:'var(--pearl-muted)',fontSize:'.84rem',marginBottom:12}}>El modo automático ahora es <b style={{color:'#F2C94C'}}>{getAutoEvent().title}</b>. Si quieres, fuerza otro al instante.</p>
+     <div style={{display:'grid',gap:8,marginBottom:20}}>
+      {EVENTS.map(ev=>{ const isAuto=getAutoEvent().slug===ev.slug; return (
+       <div key={ev.slug} className="glass-dark" style={{padding:12,borderRadius:12,display:'flex',justifyContent:'space-between',gap:10,alignItems:'center',flexWrap:'wrap'}}>
+        <div><div style={{fontWeight:600}}>{ev.title} {isAuto && <span className="chip chip-laca" style={{marginLeft:6}}>Auto hoy</span>}</div><div style={{fontSize:'.78rem',color:'var(--pearl-muted)'}}>{ev.desc}</div></div>
+        <button className="btn btn-primary btn-sm" onClick={()=>activateModeNow(ev.slug)}>Activar ahora</button>
+       </div>
+      );})}
+     </div>
+     <hr style={{border:'none',borderTop:'1px solid rgba(255,255,255,.08)',margin:'20px 0'}} />
      <h3 style={{fontWeight:700,marginBottom:12}}>Pregunta del día</h3>
      <div style={{display:'flex',gap:8,marginBottom:20,flexWrap:'wrap'}}>
       <input className="input" style={{flex:'1 1 220px'}} value={dailyQ} onChange={e=>setDailyQ(e.target.value)} placeholder="Escribe la pregunta..." />
