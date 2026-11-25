@@ -20,6 +20,10 @@ export default function Groups() {
  const [body, setBody] = useState('');
  const [loading, setLoading] = useState(true);
  const [photoFile, setPhotoFile] = useState(null);
+ const [groupQ, setGroupQ] = useState(null);
+ const [groupQBody, setGroupQBody] = useState('');
+ const [groupAns, setGroupAns] = useState('');
+ const [groupAnswers, setGroupAnswers] = useState([]);
 
  const load = async () => {
   setLoading(true);
@@ -30,13 +34,29 @@ export default function Groups() {
  };
  useEffect(()=>{ load(); },[user]);
 
+ const loadGroupQuestion = async (g) => {
+  const today = new Date().toISOString().slice(0,10);
+  let { data: q } = await supabase.from('group_daily_questions').select('*').eq('group_id', g.id).eq('active_date', today).order('created_at',{ascending:false}).limit(1).maybeSingle();
+  if(!q){
+    const { data: latest } = await supabase.from('group_daily_questions').select('*').eq('group_id', g.id).order('active_date',{ascending:false}).limit(1).maybeSingle();
+    q = latest || null;
+  }
+  setGroupQ(q);
+  if(q){
+    const { data: ans } = await supabase.from('group_daily_answers').select('*, profiles:user_id(display_name,avatar_url)').eq('question_id', q.id).order('created_at',{ascending:false}).limit(30);
+    setGroupAnswers(ans||[]);
+    const mineA = (ans||[]).find(a=>a.user_id===user.id);
+    setGroupAns(mineA?.body||'');
+  } else { setGroupAnswers([]); setGroupAns(''); }
+ };
+
  const loadPosts = async (g) => {
   setActive(g);
   const cutoff = new Date(Date.now()-12*60*60*1000).toISOString();
-  // hide expired photo posts from view
   const { data } = await supabase.from('group_posts').select('*, profiles:author_id(display_name,avatar_url)').eq('group_id', g.id).order('created_at',{ascending:false}).limit(50);
   const filtered = (data||[]).filter(p => !(p.media_url && p.created_at < cutoff));
   setPosts(filtered);
+  await loadGroupQuestion(g);
  };
 
  const canCreate = !!profile?.can_create_group;
@@ -67,9 +87,9 @@ export default function Groups() {
    const since = new Date(Date.now()-24*60*60*1000).toISOString();
    const { data: recent } = await supabase.from('group_posts').select('id').eq('group_id',active.id).eq('author_id',user.id).neq('media_url','').gte('created_at', since).limit(1);
    if(recent && recent.length){ push('Solo puedes publicar 1 foto cada 24 horas.','err'); return; }
-   const ext = (photoFile.name.split('.').pop()||'jpg').toLowerCase();
-   const path = `${user.id}/group_${active.id}_${Date.now()}.${ext}`;
-   const { error: upErr } = await supabase.storage.from('media').upload(path, photoFile, { upsert:false, contentType: photoFile.type });
+   const compressed = await compressImage(photoFile, {maxDim:1280, quality:0.76});
+   const path = `${user.id}/group_${active.id}_${Date.now()}.webp`;
+   const { error: upErr } = await supabase.storage.from('media').upload(path, compressed, { upsert:false, contentType: 'image/webp' });
    if(upErr){ push(upErr.message,'err'); return; }
    const { data:pub } = supabase.storage.from('media').getPublicUrl(path);
    media_url = pub?.publicUrl||'';
@@ -77,6 +97,24 @@ export default function Groups() {
   if(!body.trim() && !media_url) return;
   const { error } = await supabase.from('group_posts').insert({ group_id:active.id, author_id:user.id, body:body.trim().slice(0,600), media_url });
   if(error) push(error.message,'err'); else { setBody(''); setPhotoFile(null); loadPosts(active); }
+ };
+
+ const saveGroupQuestion = async () => {
+  if(!active || active.owner_id!==user.id) return;
+  if(!groupQBody.trim()) return;
+  const today = new Date().toISOString().slice(0,10);
+  const { error } = await supabase.from('group_daily_questions').upsert({
+    group_id: active.id, owner_id: user.id, question: groupQBody.trim().slice(0,240), active_date: today
+  }, { onConflict:'group_id,active_date' });
+  if(error) push(error.message,'err'); else { push('Pregunta del día publicada en tu grupo','ok'); setGroupQBody(''); loadGroupQuestion(active); }
+ };
+
+ const submitGroupAnswer = async () => {
+  if(!groupQ || !groupAns.trim()) return;
+  const { error } = await supabase.from('group_daily_answers').upsert({
+    question_id: groupQ.id, user_id: user.id, body: groupAns.trim().slice(0,300)
+  }, { onConflict:'question_id,user_id' });
+  if(error) push(error.message,'err'); else { push('Respuesta guardada','ok'); loadGroupQuestion(active); }
  };
 
  if(active) return (
@@ -88,6 +126,38 @@ export default function Groups() {
     <p style={{color:'var(--pearl-dim)'}}>{active.description||'Sin descripción'}</p>
     <div style={{marginTop:10,fontSize:'.82rem',color:'var(--pearl-muted)'}}>Por {active.profiles?.display_name||'alguien'}</div>
    </div>
+
+   <div className="glass" style={{padding:18,marginBottom:16}}>
+    <div className="eyebrow">Pregunta del día del grupo</div>
+    {active.owner_id===user.id && (
+     <div style={{marginBottom:14}}>
+      <div style={{fontSize:'.82rem',color:'var(--pearl-muted)',marginBottom:8}}>Como jefe del grupo, puedes lanzar la pregunta del día para tu gente.</div>
+      <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+       <input className="input" value={groupQBody} onChange={e=>setGroupQBody(e.target.value)} placeholder="Escribe la pregunta del día..." />
+       <button className="btn btn-primary btn-sm" type="button" onClick={saveGroupQuestion}>Publicar</button>
+      </div>
+     </div>
+    )}
+    {groupQ ? (
+     <div>
+      <div style={{fontWeight:700,marginBottom:10,lineHeight:1.5}}>{groupQ.question}</div>
+      <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:12}}>
+       <input className="input" value={groupAns} onChange={e=>setGroupAns(e.target.value)} placeholder="Tu respuesta..." />
+       <button className="btn btn-primary btn-sm" type="button" onClick={submitGroupAnswer}>{groupAnswers.some(a=>a.user_id===user.id)?'Actualizar':'Responder'}</button>
+      </div>
+      <div style={{display:'grid',gap:8}}>
+       {groupAnswers.slice(0,8).map(a=>(
+        <div key={a.id} className="glass-dark" style={{padding:10,borderRadius:12}}>
+         <div style={{fontSize:'.78rem',color:'#F2C94C',marginBottom:4}}>{a.profiles?.display_name||'Miembro'}</div>
+         <div style={{fontSize:'.88rem',color:'var(--pearl-dim)',lineHeight:1.5}}>{a.body}</div>
+        </div>
+       ))}
+       {groupAnswers.length===0 && <div style={{fontSize:'.82rem',color:'var(--pearl-muted)'}}>Aún no hay respuestas. Rompe el hielo.</div>}
+      </div>
+     </div>
+    ) : <div style={{fontSize:'.86rem',color:'var(--pearl-muted)'}}>Todavía no hay pregunta del día en este grupo.</div>}
+   </div>
+
    <form className="glass" style={{padding:14,marginBottom:16}} onSubmit={post}>
     <textarea className="input" style={{minHeight:80}} value={body} onChange={e=>setBody(e.target.value)} placeholder="Publica en el muro del grupo..." />
     {active.owner_id===user.id && (
