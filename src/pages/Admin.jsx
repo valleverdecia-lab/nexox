@@ -28,6 +28,9 @@ export default function Admin() {
  const [flashPrompt, setFlashPrompt] = useState('');
  const [flashMinutes, setFlashMinutes] = useState('15');
  const [flashReward, setFlashReward] = useState('');
+ const [giftTarget, setGiftTarget] = useState('');
+ const [giftKeyGrant, setGiftKeyGrant] = useState('vela');
+ const [giftQty, setGiftQty] = useState('1');
  const [inspect, setInspect] = useState(null);
  const [inspectMatches, setInspectMatches] = useState([]);
  const [inspectThread, setInspectThread] = useState([]);
@@ -55,6 +58,15 @@ export default function Admin() {
 
  const grant = async () => { if(!targetId) return; const { error } = await supabase.rpc('admin_grant_premium', { target: targetId.trim(), days: parseInt(days||'30') }); if(error) push(error.message,'err'); else { push('Premium activado','ok'); loadUsers(); } };
  const revoke = async () => { if(!targetId) return; const { error } = await supabase.rpc('admin_revoke_premium', { target: targetId.trim() }); if(error) push(error.message,'err'); else { push('Premium retirado','ok'); loadUsers(); } };
+ const grantGift = async () => {
+  if(!giftTarget.trim()) return;
+  const { data: prof, error: e1 } = await supabase.from('profiles').select('gift_credits').eq('id', giftTarget.trim()).maybeSingle();
+  if(e1||!prof){ push(e1?.message||'Usuario no encontrado','err'); return; }
+  const credits = {...(prof.gift_credits||{})};
+  credits[giftKeyGrant] = (Number(credits[giftKeyGrant]||0) + Math.max(1,parseInt(giftQty||'1')));
+  const { error } = await supabase.from('profiles').update({ gift_credits: credits }).eq('id', giftTarget.trim());
+  if(error) push(error.message,'err'); else push('Créditos de regalo otorgados','ok');
+ };
  const ban = async (id) => { const { error } = await supabase.rpc('admin_ban', { target:id, reason:'admin' }); if(error) push(error.message,'err'); else { push('Usuario baneado','ok'); loadUsers(); } };
  const unban = async (id) => { const { error } = await supabase.rpc('admin_unban', { target:id }); if(error) push(error.message,'err'); else { push('Usuario desbaneado','ok'); loadUsers(); } };
  const delUser = async (id) => { if(!confirm('Eliminar cuenta definitivamente?')) return; const { error } = await supabase.rpc('admin_delete_user', { target:id }); if(error) push(error.message,'err'); else { push('Cuenta eliminada','ok'); loadUsers(); } };
@@ -132,6 +144,14 @@ export default function Admin() {
      <div className="field"><label>ID de usuario</label><input className="input" value={targetId} onChange={e=>setTargetId(e.target.value)} placeholder="uuid del usuario" /></div>
      <div className="field"><label>Días</label><input className="input" type="number" value={days} onChange={e=>setDays(e.target.value)} /></div>
      <div style={{display:'flex',gap:10,flexWrap:'wrap'}}><button className="btn btn-primary" onClick={grant}>Activar Premium</button><button className="btn btn-glass" onClick={revoke}>Quitar Premium</button></div>
+     <hr style={{border:'none',borderTop:'1px solid rgba(255,255,255,.08)',margin:'20px 0'}} />
+     <h3 style={{fontWeight:700,marginBottom:12}}>Créditos Lujuria (packs)</h3>
+     <div className="field"><label>ID usuario</label><input className="input" value={giftTarget} onChange={e=>setGiftTarget(e.target.value)} placeholder="uuid" /></div>
+     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+      <div className="field"><label>Regalo</label><select className="input" value={giftKeyGrant} onChange={e=>setGiftKeyGrant(e.target.value)}><option value="vela">Vela</option><option value="fuego">Fuego</option><option value="luna">Luna Roja</option><option value="corona">Corona</option></select></div>
+      <div className="field"><label>Cantidad</label><input className="input" type="number" value={giftQty} onChange={e=>setGiftQty(e.target.value)} /></div>
+     </div>
+     <button className="btn btn-primary btn-sm" onClick={grantGift}>Otorgar créditos</button>
     </div></Beam>
    )}
 

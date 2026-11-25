@@ -27,7 +27,7 @@ export default function Profile() {
   useEffect(()=>{ if(profile) setForm({
     display_name:profile.display_name||'', bio:profile.bio||'', country:profile.country||'', ciudad:profile.ciudad||'',
     gender:profile.gender||'', seeking:profile.seeking||'', birth_year:profile.birth_year||'', ig_handle:profile.ig_handle||'',
-    passport_city:profile.passport_city||'', incognito: !!profile.incognito
+    passport_city:profile.passport_city||'', incognito: !!profile.incognito, desire_mood: profile.desire_mood||''
   }); },[profile]);
   useEffect(()=>{ (async()=>{ const { data } = await supabase.rpc('get_received_whispers'); setWhispers(data||[]); })(); },[user]);
   useEffect(()=>{ supabase.rpc('touch_streak').then(()=>refreshProfile()).catch(()=>{}); },[]);
@@ -208,6 +208,22 @@ export default function Profile() {
       </Beam>
 
       <div className="glass" style={{padding:18,marginBottom:16}}>
+        <div className="eyebrow">Lujuria · Deseo</div>
+        <h3 style={{fontWeight:700,marginBottom:8}}>Vende la vibra, no la presión</h3>
+        <p style={{color:'var(--pearl-muted)',fontSize:'.86rem',marginBottom:12}}>Regalos sensuales elegantes para subir la temperatura. Los gratis se recargan; los packs son opcionales.</p>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:12}}>
+          <span className="chip chip-laca">Calor: {profile?.desire_score||0}</span>
+          {(profile?.desire_score||0)>=75 ? <span className="chip chip-laca">Leyenda del Deseo</span> : (profile?.desire_score||0)>=30 ? <span className="chip">Imán</span> : (profile?.desire_score||0)>=10 ? <span className="chip">Tentador</span> : <span className="chip">Entrando en calor</span>}
+          {profile?.desire_mood && <span className="chip">{({charla:'Solo charla',quimica:'Química',lo_que_surja:'Lo que surja',fuego_discreto:'Fuego discreto'})[profile.desire_mood]||profile.desire_mood}</span>}
+        </div>
+        <div style={{display:'grid',gap:8}}>
+          <div className="glass-dark" style={{padding:12,borderRadius:12,fontSize:'.84rem',color:'var(--pearl-dim)'}}><b style={{color:'#F2C94C'}}>Gratis:</b> Mirada y Suspiro se recargan cada día. Premium recibe más regalos gratis diarios.</div>
+          <div className="glass-dark" style={{padding:12,borderRadius:12,fontSize:'.84rem',color:'var(--pearl-dim)'}}><b style={{color:'#F2C94C'}}>Packs CUP:</b> 5 Velas 800 · 5 Fuegos 1,400 · 3 Lunas Rojas 1,200 · Mix 2,000. Compra por WhatsApp, sin suscripción forzada.</div>
+        </div>
+        <a className="btn btn-glass btn-sm" style={{marginTop:12}} href={waLink(`Hola, quiero comprar un Pack Lujuria en Palacalle. Mi ID: ${user?.id}. Nombre: ${profile?.display_name||''}.`)} target="_blank" rel="noopener noreferrer">Comprar Pack Lujuria</a>
+      </div>
+
+      <div className="glass" style={{padding:18,marginBottom:16}}>
         <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'center',flexWrap:'wrap',marginBottom:10}}>
           <div><div className="eyebrow" style={{marginBottom:4}}>Visitas misteriosas</div><div style={{fontWeight:700}}>{viewsInfo.count||0} personas te miraron en 24h</div></div>
           {!viewsInfo.can_reveal && <span className="chip">Revela con Premium o caja</span>}
@@ -256,6 +272,7 @@ export default function Profile() {
             <div className="field"><label>Año nac.</label><input className="input" type="number" value={form.birth_year||''} onChange={e=>setForm({...form,birth_year:e.target.value})} /></div>
             <div className="field"><label>Género</label><select className="input" value={form.gender||''} onChange={e=>setForm({...form,gender:e.target.value})}><option value="">-</option><option value="mujer">Mujer</option><option value="hombre">Hombre</option><option value="otro">Otro</option></select></div>
             <div className="field"><label>Busco</label><select className="input" value={form.seeking||''} onChange={e=>setForm({...form,seeking:e.target.value})}><option value="">-</option><option value="mujeres">Mujeres</option><option value="hombres">Hombres</option><option value="todos">Todos</option></select></div>
+            <div className="field"><label>Vibra / Deseo</label><select className="input" value={form.desire_mood||''} onChange={e=>setForm({...form,desire_mood:e.target.value})}><option value="">Elige tu vibra</option><option value="charla">Solo charla</option><option value="quimica">Química</option><option value="lo_que_surja">Lo que surja</option><option value="fuego_discreto">Fuego discreto</option></select></div>
           </div>
           <div style={{display:'flex',gap:10,flexWrap:'wrap'}}><button className="btn btn-primary" disabled={saving}>{saving?'Guardando...':'Guardar cambios'}</button><button type="button" className="btn btn-glass" onClick={saveLocation}>Guardar mi ubicación</button></div>
         </form>

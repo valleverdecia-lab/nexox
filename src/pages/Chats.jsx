@@ -2,7 +2,8 @@ import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { timeAgo, initials } from '../lib/helpers';
+import { timeAgo, initials, waLink } from '../lib/helpers';
+import { DESIRE_GIFTS, DESIRE_PACKS, WHATSAPP_DISPLAY } from '../lib/config';
 import Beam from '../components/Beam';
 
 const ICEBREAKERS = [
@@ -34,6 +35,9 @@ export default function Chats() {
   const [recSec, setRecSec] = useState(0);
   const [sendingAudio, setSendingAudio] = useState(false);
   const [tick, setTick] = useState(0);
+  const [giftOpen, setGiftOpen] = useState(false);
+  const [giftKey, setGiftKey] = useState('mirada');
+  const [giftNote, setGiftNote] = useState('');
   const endRef = useRef(null);
   const mediaRef = useRef(null);
   const chunksRef = useRef([]);
@@ -125,6 +129,25 @@ export default function Chats() {
     finally { setSendingAudio(false); }
   };
 
+  const sendGift = async () => {
+    if(!active?.other) return;
+    const g = DESIRE_GIFTS.find(x=>x.key===giftKey);
+    if(!g) return;
+    const { data, error } = await supabase.rpc('send_desire_gift', { p_to: active.other.id, p_gift: giftKey, p_note: giftNote.trim().slice(0,140), p_context: 'chat' });
+    if(error){
+      const m = String(error.message);
+      if(m.includes('gift_limit')) push('Ya usaste tus regalos gratis de hoy. Se recargan mañana. Premium tiene más.','err');
+      else if(m.includes('no_gift_credit')) push('No tienes créditos de ese regalo. Puedes comprar un pack por WhatsApp.','err');
+      else push('No se pudo enviar el regalo','err');
+      return;
+    }
+    const body = JSON.stringify({gift:giftKey,name:g.name,note:giftNote.trim().slice(0,140)});
+    await supabase.from('messages').insert({ match_id: active.id, sender_id: user.id, body, kind:'gift' });
+    setMsgs(m=>[...m,{id:Date.now(),match_id:active.id,sender_id:user.id,body,kind:'gift',created_at:new Date().toISOString()}]);
+    setGiftOpen(false); setGiftNote(''); push(`${g.name} enviado`,'ok');
+    setTimeout(()=>endRef.current?.scrollIntoView({behavior:'smooth'}),50);
+  };
+
   const reportActive = async () => {
     if(!active?.other) return;
     const reason = prompt('¿Por qué quieres reportar a esta persona?');
@@ -175,12 +198,20 @@ export default function Chats() {
             {msgs.map(m => {
               const mine = m.sender_id===user.id;
               const isAudio = m.kind==='audio' && m.audio_url;
+              const isGift = m.kind==='gift';
+              let gift=null; if(isGift){ try{ gift=JSON.parse(m.body); }catch{ gift={name:'Regalo',note:m.body}; } }
               return <div key={m.id} style={{display:'flex',justifyContent:mine?'flex-end':'flex-start'}}>
                 <div className={mine?'':'glass'} style={{maxWidth:'78%',padding:'12px 14px',borderRadius:mine?'20px 20px 6px 20px':'20px 20px 20px 6px',background:mine?'linear-gradient(135deg,#D4A017,#E5B829)':'',color:mine?'#111':'var(--pearl)',boxShadow:mine?'0 10px 30px rgba(212,160,23,.25)':'none'}}>
                   {isAudio ? (
                     <div>
                       <div style={{fontSize:'.78rem',fontWeight:700,marginBottom:6}}>Nota de voz</div>
                       <audio controls preload="none" src={m.audio_url} style={{width:'min(260px,60vw)',height:36}} />
+                    </div>
+                  ) : isGift ? (
+                    <div>
+                      <div style={{fontSize:'.72rem',opacity:.8,marginBottom:4}}>REGALO DE DESEO</div>
+                      <div style={{fontWeight:800,fontSize:'1.05rem'}}>{gift?.name||'Regalo'}</div>
+                      {gift?.note && <div style={{marginTop:6,fontSize:'.88rem',lineHeight:1.5}}>{gift.note}</div>}
                     </div>
                   ) : <div style={{lineHeight:1.6,fontSize:'.94rem',whiteSpace:'pre-wrap'}}>{m.body}</div>}
                   <div style={{fontSize:'.68rem',opacity:.7,marginTop:6}}>{timeAgo(m.created_at)} · efímero</div>
@@ -203,6 +234,7 @@ export default function Chats() {
               </>
             ) : (
               <form onSubmit={send} style={{display:'flex',gap:8,width:'100%',alignItems:'center'}}>
+                <button type="button" className="btn btn-glass btn-sm" onClick={()=>setGiftOpen(true)} disabled={sp.dead} title="Regalo de deseo" style={{minWidth:44,display:'grid',placeItems:'center'}}>✦</button>
                 <button type="button" className="btn btn-glass btn-sm" onClick={startRecording} disabled={sendingAudio || sp.dead} title="Nota de voz" style={{minWidth:44,display:'grid',placeItems:'center'}}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0"/><path d="M12 18v4M8 22h8"/></svg>
                 </button>
