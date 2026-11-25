@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { timeAgo, initials, waLink } from '../lib/helpers';
 import { WHATSAPP_DISPLAY } from '../lib/config';
+import { compressImage } from '../lib/image';
 import Beam from '../components/Beam';
 
 export default function Groups() {

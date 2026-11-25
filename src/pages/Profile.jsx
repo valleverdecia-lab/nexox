@@ -76,6 +76,7 @@ export default function Profile() {
    
 
    
+    <Beam size="md" colorVariant="mono" strength={0.4}>
     <div className="glass-strong" style={{padding:24,marginBottom:16}}>
      <div className="eyebrow">Palacalle Premium</div>
      <h3 className="h2" style={{fontSize:'1.8rem',marginBottom:8}}>Más alcance, <span style={{fontStyle:'italic',color:'#F2C94C'}}>más fuego</span></h3>
@@ -100,6 +101,7 @@ export default function Profile() {
      </a>
      <p style={{fontSize:'.72rem',color:'var(--pearl-muted)',marginTop:10,lineHeight:1.6}}>El mensaje ya incluye tu ID para activar tu cuenta rápido. Pagos en CUP.</p>
     </div>
+    </Beam>
    
    
     <div className="glass" style={{padding:20,marginBottom:16}}>

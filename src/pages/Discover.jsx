@@ -66,7 +66,7 @@ export default function Discover() {
    // check mutual
    const { data: mutual } = await supabase.from('likes').select('from_id').eq('from_id',p.id).eq('to_id',user.id).maybeSingle();
    if(mutual){
-    await supabase.from('matches').upsert({user_a: user.id< p.id?user.id:p.id, user_b: user.id< p.id?p.id:user.id}, {onConflict:'user_a,user_b'});
+    /* match created by DB trigger */
     await supabase.from('profiles').update({last_match_at:new Date().toISOString()}).in('id',[user.id,p.id]);
     push(`¡Match con ${p.display_name}! La calle se puso buena.`, 'ember');
    } else {

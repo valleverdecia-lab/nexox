@@ -35,7 +35,7 @@ export default function Calenton() {
   if(error) return push('No se pudo dar like','err');
   const { data: mutual } = await supabase.from('likes').select('from_id').eq('from_id',p.id).eq('to_id',user.id).maybeSingle();
   if(mutual){
-   await supabase.from('matches').upsert({user_a:user.id<p.id?user.id:p.id, user_b:user.id<p.id?p.id:user.id},{onConflict:'user_a,user_b'});
+   /* match created by DB trigger */
    push(`¡Match con ${p.display_name}!`, 'ember');
   } else push(`Le mandaste calor a ${p.display_name}`, 'ok');
  };
