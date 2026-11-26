@@ -5,6 +5,7 @@ import Background from './components/Background';
 import Nav from './components/Nav';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { LangProvider } from './context/LangContext';
 import Landing from './pages/Landing';
 import Discover from './pages/Discover';
 import Calle from './pages/Calle';
@@ -82,10 +83,12 @@ function Shell() {
 
 export default function App() {
  return (
-  <ToastProvider>
-   <AuthProvider>
-    <Shell />
-   </AuthProvider>
-  </ToastProvider>
+  <LangProvider>
+   <ToastProvider>
+    <AuthProvider>
+     <Shell />
+    </AuthProvider>
+   </ToastProvider>
+  </LangProvider>
  );
 }

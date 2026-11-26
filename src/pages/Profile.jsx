@@ -23,6 +23,7 @@ export default function Profile() {
   const [reward, setReward] = useState(null);
   const [claimingReward, setClaimingReward] = useState(false);
   const [viewsInfo, setViewsInfo] = useState({count:0,can_reveal:false,viewers:[]});
+  const [ranking, setRanking] = useState(null);
 
   useEffect(()=>{ if(profile) setForm({
     display_name:profile.display_name||'', bio:profile.bio||'', country:profile.country||'', ciudad:profile.ciudad||'',
@@ -32,7 +33,7 @@ export default function Profile() {
   useEffect(()=>{ (async()=>{ const { data } = await supabase.rpc('get_received_whispers'); setWhispers(data||[]); })(); },[user]);
   useEffect(()=>{ supabase.rpc('touch_streak').then(()=>refreshProfile()).catch(()=>{}); },[]);
   const loadViews = async ()=>{ const { data } = await supabase.rpc('my_profile_views'); if(data) setViewsInfo(data); };
-  useEffect(()=>{ loadViews(); },[user?.id]);
+  useEffect(()=>{ loadViews(); supabase.rpc('my_ranking').then(({data})=>{ if(data) setRanking(data); }).catch(()=>{}); },[user?.id]);
 
   const PLANS = [
     { id:'1m', label:'1 mes', price:'1,500 CUP', per:'1,500 CUP/mes', save:'Acceso total', note:'Ideal para probar el fuego.' },
@@ -187,6 +188,57 @@ export default function Profile() {
           ))}
         </div>
       </div>
+
+      {(()=>{ 
+        const mangoLvl = Math.min(10, 1 + Math.floor(((profile?.streak_count||0)*2 + (profile?.desire_score||0)/15 + (profile?.last_match_at?3:0) + (profile?.voice_intro_url?2:0))/3));
+        const mangoMood = mangoLvl>=8?'En fuego':mangoLvl>=5?'Vibrando':mangoLvl>=3?'Con hambre de calle':'Despertando';
+        const nextOfferH = 23 - new Date().getHours();
+        return (<>
+      <Beam size="md" colorVariant="sunset" strength={0.45}>
+      <div className="glass-strong" style={{padding:20,marginBottom:16}}>
+        <div className="eyebrow">Mango · tu mascota de calle</div>
+        <div style={{display:'flex',gap:14,alignItems:'center',flexWrap:'wrap'}}>
+          <div style={{width:76,height:76,borderRadius:24,display:'grid',placeItems:'center',fontSize:'2.4rem',background:'linear-gradient(135deg,rgba(212,160,23,.22),rgba(242,201,76,.08))',border:'1px solid rgba(212,160,23,.28)'}}>🥭</div>
+          <div style={{flex:'1 1 180px'}}>
+            <div style={{fontWeight:800,fontSize:'1.1rem'}}>Mango Nv. {mangoLvl} <span style={{color:'#F2C94C',fontSize:'.85rem'}}>· {mangoMood}</span></div>
+            <div style={{fontSize:'.82rem',color:'var(--pearl-muted)',marginTop:4}}>Mango crece con tus acciones: racha, matches, voz, regalos y presencia en La Calle.</div>
+            <div style={{height:8,background:'rgba(255,255,255,.08)',borderRadius:999,marginTop:10,overflow:'hidden'}}><div style={{width:`${mangoLvl*10}%`,height:'100%',background:'linear-gradient(90deg,#D4A017,#F2C94C)'}}/></div>
+          </div>
+        </div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:12}}>
+          <span className="chip">Aliméntalo: entra a La Calle</span><span className="chip">Envíale voz</span><span className="chip">Haz match</span>
+        </div>
+      </div>
+      </Beam>
+
+      <div className="glass" style={{padding:18,marginBottom:16}}>
+        <div className="eyebrow">Ranking de la calle</div>
+        <h3 style={{fontWeight:700,marginBottom:8}}>Tu estatus social</h3>
+        {ranking ? (
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:10}}>
+            <div className="glass-dark" style={{padding:14,borderRadius:14}}><div style={{fontSize:'.75rem',color:'var(--pearl-muted)'}}>Tu puesto</div><div style={{fontSize:'1.5rem',fontWeight:800,color:'#F2C94C'}}>#{ranking.rank}</div></div>
+            <div className="glass-dark" style={{padding:14,borderRadius:14}}><div style={{fontSize:'.75rem',color:'var(--pearl-muted)'}}>Top</div><div style={{fontSize:'1.5rem',fontWeight:800,color:'#F2C94C'}}>{ranking.top_pct}%</div></div>
+            <div className="glass-dark" style={{padding:14,borderRadius:14}}><div style={{fontSize:'.75rem',color:'var(--pearl-muted)'}}>Calor</div><div style={{fontSize:'1.5rem',fontWeight:800,color:'#F2C94C'}}>{ranking.desire_score}</div></div>
+          </div>
+        ) : <p style={{color:'var(--pearl-muted)',fontSize:'.86rem'}}>Cargando tu ranking...</p>}
+        <p style={{fontSize:'.8rem',color:'var(--pearl-muted)',marginTop:10}}>Sube con racha, regalos, actividad y matches. Los de arriba se ven más tentadores.</p>
+      </div>
+
+      <div className="glass" style={{padding:18,marginBottom:16,borderColor:'rgba(212,160,23,.3)'}}>
+        <div className="eyebrow">Oferta que se va</div>
+        <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'center',flexWrap:'wrap'}}>
+          <div>
+            <h3 style={{fontWeight:700,marginBottom:4}}>Pack Noche de Fuego</h3>
+            <p style={{fontSize:'.84rem',color:'var(--pearl-muted)'}}>Boost 24h + 3 Susurros extra. Ideal para los que están lejos y quieren calor ahora.</p>
+          </div>
+          <span className="chip chip-live">Termina en {nextOfferH}h</span>
+        </div>
+        <div style={{display:'flex',gap:10,alignItems:'center',marginTop:12,flexWrap:'wrap'}}>
+          <span style={{fontWeight:800,color:'#F2C94C',fontSize:'1.1rem'}}>550 CUP</span>
+          <a className="btn btn-primary btn-sm" href={waLink(`Hola, quiero el Pack Noche de Fuego (550 CUP). Mi ID: ${user?.id}. Nombre: ${profile?.display_name||''}.`)} target="_blank" rel="noopener noreferrer">Lo quiero</a>
+        </div>
+      </div>
+        </>);})()}
 
       <div className="glass" style={{padding:18,marginBottom:16,display:'flex',gap:10,flexWrap:'wrap'}}>
         <button className="btn btn-glass btn-sm" onClick={loadLikedMe}>Quién me dio like</button>

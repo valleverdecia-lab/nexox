@@ -4,10 +4,12 @@ import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../context/ToastContext';
 import { APP_NAME, APP_TAGLINE } from '../lib/config';
+import { useLang } from '../context/LangContext';
 import Beam from '../components/Beam';
 
 export default function Landing() {
  const { push } = useToast();
+ const { t } = useLang();
  const [sp] = useSearchParams();
  useEffect(()=>{ const ref=(sp.get('ref')||'').trim().toUpperCase(); if(ref){ localStorage.setItem('pc_ref',ref); supabase.from('affiliate_hits').insert({affiliate_code:ref, visitor_fp:navigator.userAgent.slice(0,60)}).then(()=>{}); } },[sp]);
  const [mode, setMode] = useState('login'); // login | register
@@ -52,16 +54,16 @@ export default function Landing() {
   <div className="page" style={{display:'grid',alignItems:'center',minHeight:'100dvh',paddingBottom:'40px'}}>
    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(320px,1fr))',gap:28,alignItems:'center',width:'100%'}}>
     <motion.div initial={{opacity:0,y:30}} animate={{opacity:1,y:0}} transition={{duration:.7,ease:[.22,1,.36,1]}}>
-     <div className="eyebrow">Conexiones reales · Cuba × Mundo</div>
-     <h1 className="h1" style={{marginBottom:18}}>Donde Cuba <em>se cruza</em> contigo.</h1>
+     <div className="eyebrow">{t("landing_eyebrow")}</div>
+     <h1 className="h1" style={{marginBottom:18}}>{t("landing_title_a")}<em>{t("landing_title_b")}</em>{t("landing_title_c")}</h1>
      <p className="sub" style={{marginBottom:28}}>
-      Palacalle es el punto de encuentro entre cubanos y personas de Europa, EE. UU. y Latinoamérica que quieren algo más que un swipe vacío. Elegante, cercano, real.
+      {t("landing_sub")}
      </p>
      <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
-      <span className="chip chip-live">En vivo ahora</span>
+      <span className="chip chip-live">{t("landing_live")}</span>
       <span className="chip">Modo Calentón</span>
-      <span className="chip">Susurros</span>
-      <span className="chip">La Calle 20:00–05:00</span>
+      <span className="chip">{t("landing_whispers")}</span>
+      <span className="chip">{t("landing_street")}</span>
      </div>
     </motion.div>
 
@@ -79,7 +81,7 @@ export default function Landing() {
        <div style={{display:'flex',gap:8,marginBottom:18}}>
         {['login','register'].map(m => (
          <button key={m} onClick={()=>setMode(m)} className={`btn btn-sm ${mode===m?'btn-primary':'btn-glass'}`} style={{flex:1}}>
-          {m==='login'?'Entrar':'Crear cuenta'}
+          {m==='login'?t('login'):t('register')}
          </button>
         ))}
        </div>
@@ -87,23 +89,23 @@ export default function Landing() {
        <div style={{display:'flex',gap:8,marginBottom:18}}>
         {['email','phone'].map(m => (
          <button key={m} onClick={()=>setMethod(m)} className={`chip ${method===m?'chip-laca':''}`} style={{cursor:'pointer',borderStyle:'solid'}}>
-          {m==='email'?'Correo':'Teléfono'}
+          {m==='email'?t('email'):t('phone')}
          </button>
         ))}
        </div>
 
        <form onSubmit={submit}>
         {mode==='register' && (
-         <div className="field"><label>Tu nombre</label><input className="input" value={name} onChange={e=>setName(e.target.value)} placeholder="Cómo te llamas en la calle" required /></div>
+         <div className="field"><label>{t("name")}</label><input className="input" value={name} onChange={e=>setName(e.target.value.slice(0,40))} placeholder={t('name_ph')} maxLength={40} required /></div>
         )}
         {method==='email' ? (
-         <div className="field"><label>Correo</label><input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="tu@correo.com" required /></div>
+         <div className="field"><label>{t("email")}</label><input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="tu@correo.com" maxLength={120} required /></div>
         ) : (
-         <div className="field"><label>Teléfono</label><input className="input" type="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+1 555 000 0000" required /></div>
+         <div className="field"><label>{t("phone")}</label><input className="input" type="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+1 555 000 0000" maxLength={20} required /></div>
         )}
-        <div className="field"><label>Contraseña</label><input className="input" type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" minLength={6} required /></div>
+        <div className="field"><label>{t("password")}</label><input className="input" type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder={t('pass_ph')} minLength={6} maxLength={72} required /></div>
         <button className="btn btn-primary" style={{width:'100%',marginTop:8}} disabled={loading}>
-         {loading ? 'Un momento...' : mode==='login' ? 'Entrar a Palacalle' : 'Crear mi cuenta'}
+         {loading ? t('loading') : mode==='login' ? t('enter') : t('create_account')}
         </button>
        </form>
        <p style={{fontSize:'.72rem',color:'var(--pearl-muted)',marginTop:14,lineHeight:1.6,textAlign:'center'}}>
