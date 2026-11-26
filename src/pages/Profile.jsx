@@ -181,12 +181,26 @@ export default function Profile() {
       </div>
 
       <div className="glass" style={{padding:18,marginBottom:16}}>
-        <div className="eyebrow">Todo lo que puedes hacer</div>
-        <div style={{display:'grid',gap:8}}>
-          {[['Voz en chats','En un chat, toca “Voz”, graba hasta 60s y suelta para enviar. También tienes Voz del Malecón en tu perfil.'],['Regalos de Lujuria','En chat toca “Regalo” para enviar Miradas, Suspiros o packs premium.'],['Caja diaria','Abre tu Caja de la Calle 1 vez al día: premios reales gratis.'],['Radar Calentón','Activa ubicación, filtra por intención/distancia y ponte “Disponible 30 min”.'],['La Calle','Publica de 20:00–05:00, responde la Pregunta del Día y entra a Afinidad.'],['Modos ciegos','Cuando toque Voz Ciega o Confesión Ciega, ligas sin ver perfil hasta el match.'],['Juegos de Placer','Sección +18 con recomendaciones sensuales curadas, consentimiento y compra por WhatsApp.']].map(([t,d])=>(
-            <div key={t} className="glass-dark" style={{padding:12,borderRadius:12}}><div style={{fontWeight:700,fontSize:'.86rem',color:'#F2C94C'}}>{t}</div><div style={{fontSize:'.8rem',color:'var(--pearl-muted)',lineHeight:1.5}}>{d}</div></div>
-          ))}
-        </div>
+        <div className="eyebrow">Descubre Palacalle</div>
+        <h3 style={{fontWeight:700,marginBottom:6}}>Un mundo, capa por capa</h3>
+        <p style={{color:'var(--pearl-muted)',fontSize:'.84rem',marginBottom:14}}>No tienes que aprenderlo todo hoy. Empieza por aquí y ve desbloqueando la calle.</p>
+        {[
+          {layer:'Empieza aquí', items:[['Da likes y chatea','En Descubrir desliza o usa botones. Si hay match, abre Chats y escribe o manda Voz.'],['Caja diaria','Abre tu caja 1 vez al día: premio gratis real.'],['La Calle','De 20:00–05:00 publica, responde la Pregunta del Día y mira Afinidad.']]},
+          {layer:'Sube el nivel', items:[['Voz','En chat toca “Voz” (60s máx). En tu perfil graba Voz del Malecón.'],['Radar Calentón','Activa ubicación, filtra intención/distancia y ponte “Disponible 30 min”.'],['Visitas y ranking','Mira quién te vio, tu Top % y alimenta a Mango con tus acciones.']]},
+          {layer:'Modo tentación', items:[['Regalos Lujuria','En chat toca “Regalo”: Mirada/Suspiro gratis, packs premium opcionales.'],['Modos ciegos','Cuando toque Voz Ciega o Confesión Ciega, ligas sin ver perfil hasta el match.'],['Juegos de Placer','Sección +18 curada, con consentimiento y consulta por WhatsApp.']]},
+        ].map((g)=>(
+          <div key={g.layer} style={{marginBottom:12}}>
+            <div style={{fontSize:'.72rem',color:'#F2C94C',fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',marginBottom:8}}>{g.layer}</div>
+            <div style={{display:'grid',gap:8}}>
+              {g.items.map(([t,d])=>(
+                <div key={t} className="glass-dark" style={{padding:12,borderRadius:12}}>
+                  <div style={{fontWeight:700,fontSize:'.86rem'}}>{t}</div>
+                  <div style={{fontSize:'.8rem',color:'var(--pearl-muted)',lineHeight:1.5}}>{d}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
 
       {(()=>{ 
