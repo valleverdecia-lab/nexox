@@ -13,7 +13,6 @@ import Calenton from './pages/Calenton';
 import Chats from './pages/Chats';
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
-import Groups from './pages/Groups';
 
 function Protected({ children }) {
  const { user, loading } = useAuth();
@@ -70,7 +69,7 @@ function Shell() {
       <Route path="/app/calenton" element={<Protected><Calenton /></Protected>} />
       <Route path="/app/chats" element={<Protected><Chats /></Protected>} />
       <Route path="/app/perfil" element={<Protected><Profile /></Protected>} />
-      <Route path="/app/groups" element={<Protected><Groups /></Protected>} />
+      <Route path="/app/groups" element={<Navigate to="/app" replace />} />
       <Route path="/app/admin" element={<Protected><OwnerOnly><Admin /></OwnerOnly></Protected>} />
       <Route path="*" element={<Navigate to="/" replace />} />
      </Routes>

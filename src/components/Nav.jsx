@@ -12,7 +12,6 @@ export default function Nav() {
   {to:'/app/calle', label:t('nav_street'), icon:'M4 5h16v10H7l-3 3V5z'},
   {to:'/app/calenton', label:t('nav_heat'), icon:'M12 2c2 3 5 5 5 9a5 5 0 1 1-10 0c0-2 1-4 2-5 0 2 1 3 2 3 1-2 1-4 1-7z'},
   {to:'/app/chats', label:t('nav_chats'), icon:'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'},
-  {to:'/app/groups', label:t('nav_groups'), icon:'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm8 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75'},
   {to:'/app/perfil', label:t('nav_profile'), icon:'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'},
  ];
  return (

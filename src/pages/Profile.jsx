@@ -24,16 +24,19 @@ export default function Profile() {
   const [claimingReward, setClaimingReward] = useState(false);
   const [viewsInfo, setViewsInfo] = useState({count:0,can_reveal:false,viewers:[]});
   const [ranking, setRanking] = useState(null);
+  const [passportHeat, setPassportHeat] = useState({top_cities:[],city:{}});
+  const [savingPassport, setSavingPassport] = useState(false);
 
   useEffect(()=>{ if(profile) setForm({
     display_name:profile.display_name||'', bio:profile.bio||'', country:profile.country||'', ciudad:profile.ciudad||'',
     gender:profile.gender||'', seeking:profile.seeking||'', birth_year:profile.birth_year||'', ig_handle:profile.ig_handle||'',
-    passport_city:profile.passport_city||'', incognito: !!profile.incognito, desire_mood: profile.desire_mood||''
+    passport_city:profile.passport_city||'', passport_mode:profile.passport_mode||'', passport_until:profile.passport_until?String(profile.passport_until).slice(0,10):'', incognito: !!profile.incognito, desire_mood: profile.desire_mood||''
   }); },[profile]);
   useEffect(()=>{ (async()=>{ const { data } = await supabase.rpc('get_received_whispers'); setWhispers(data||[]); })(); },[user]);
   useEffect(()=>{ supabase.rpc('touch_streak').then(()=>refreshProfile()).catch(()=>{}); },[]);
   const loadViews = async ()=>{ const { data } = await supabase.rpc('my_profile_views'); if(data) setViewsInfo(data); };
-  useEffect(()=>{ loadViews(); supabase.rpc('my_ranking').then(({data})=>{ if(data) setRanking(data); }).catch(()=>{}); },[user?.id]);
+  const loadPassportHeat = async (city)=>{ const { data } = await supabase.rpc('passport_heat', { p_city: city || profile?.passport_city || '' }); if(data) setPassportHeat(data); };
+  useEffect(()=>{ loadViews(); supabase.rpc('my_ranking').then(({data})=>{ if(data) setRanking(data); }).catch(()=>{}); loadPassportHeat(profile?.passport_city||''); },[user?.id]);
 
   const PLANS = [
     { id:'1m', label:'1 mes', price:'1,500 CUP', per:'1,500 CUP/mes', save:'Acceso total', note:'Ideal para probar el fuego.' },
@@ -51,10 +54,18 @@ export default function Profile() {
 
   const save = async (e) => {
     e.preventDefault(); setSaving(true);
-    const payload = { ...form, birth_year: form.birth_year?parseInt(form.birth_year):null, last_active_at:new Date().toISOString() };
+    const payload = { ...form, birth_year: form.birth_year?parseInt(form.birth_year):null, passport_until: form.passport_until?new Date(form.passport_until).toISOString():null, last_active_at:new Date().toISOString() };
     const { error } = await supabase.from('profiles').update(payload).eq('id', user.id);
     setSaving(false);
-    if(error) push(error.message,'err'); else { push('Perfil guardado','ok'); refreshProfile(); }
+    if(error) push(error.message,'err'); else { push('Perfil guardado','ok'); refreshProfile(); loadPassportHeat(form.passport_city); }
+  };
+
+  const savePassport = async () => {
+    setSavingPassport(true);
+    const payload = { passport_city:(form.passport_city||'').slice(0,60), passport_mode:form.passport_mode||'', passport_until: form.passport_until?new Date(form.passport_until).toISOString():null };
+    const { error } = await supabase.from('profiles').update(payload).eq('id', user.id);
+    setSavingPassport(false);
+    if(error) push(error.message,'err'); else { push('Pasaporte de Calor actualizado','ok'); refreshProfile(); loadPassportHeat(payload.passport_city); }
   };
 
   const saveLocation = async () => {
@@ -236,6 +247,41 @@ export default function Profile() {
           </div>
         ) : <p style={{color:'var(--pearl-muted)',fontSize:'.86rem'}}>Cargando tu ranking...</p>}
         <p style={{fontSize:'.8rem',color:'var(--pearl-muted)',marginTop:10}}>Sube con racha, regalos, actividad y matches. Los de arriba se ven más tentadores.</p>
+      </div>
+
+      <div className="glass" style={{padding:18,marginBottom:16,borderColor:'rgba(212,160,23,.22)'}}>
+        <div className="eyebrow">Pasaporte de Calor</div>
+        <h3 style={{fontWeight:700,marginBottom:6}}>Tu próxima ciudad, tu próxima vibra</h3>
+        <p style={{fontSize:'.84rem',color:'var(--pearl-muted)',marginBottom:12}}>Dime dónde estás o a dónde vas. Te muestro el calor de la calle antes de aterrizar.</p>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:10}}>
+          {[['','Sin pasaporte'],['here','Estoy aquí'],['going','Voy para allá']].map(([v,l])=>(
+            <button key={v||'none'} className={`btn btn-sm ${form.passport_mode===v?'btn-primary':'btn-glass'}`} onClick={()=>setForm(f=>({...f,passport_mode:v}))}>{l}</button>
+          ))}
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:10}}>
+          <div className="field" style={{margin:0}}><label>Ciudad</label><input className="input" value={form.passport_city||''} onChange={e=>setForm({...form,passport_city:e.target.value.slice(0,60)})} placeholder="Miami, Madrid, La Habana..." /></div>
+          {form.passport_mode==='going' && <div className="field" style={{margin:0}}><label>Aterrizo / hasta</label><input className="input" type="date" value={form.passport_until||''} onChange={e=>setForm({...form,passport_until:e.target.value})} /></div>}
+        </div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:10}}>
+          <button className="btn btn-primary btn-sm" onClick={savePassport} disabled={savingPassport}>{savingPassport?'Guardando...':'Activar pasaporte'}</button>
+          <button className="btn btn-glass btn-sm" onClick={()=>loadPassportHeat(form.passport_city||'')}>Ver calor</button>
+          <a className="btn btn-glass btn-sm" href={waLink(`Hola, quiero el Travel Boost de Pasaporte de Calor para ${form.passport_city||'mi ciudad'}. Mi ID: ${user?.id}. Nombre: ${profile?.display_name||''}.`)} target="_blank" rel="noopener noreferrer">Travel Boost</a>
+        </div>
+        {passportHeat?.city?.city ? (
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(120px,1fr))',gap:10,marginTop:14}}>
+            <div className="glass-dark" style={{padding:12,borderRadius:12}}><div style={{fontSize:'.72rem',color:'var(--pearl-muted)'}}>Calor ahora</div><div style={{fontSize:'1.35rem',fontWeight:800,color:'#F2C94C'}}>{passportHeat.city.here_now}</div></div>
+            <div className="glass-dark" style={{padding:12,borderRadius:12}}><div style={{fontSize:'.72rem',color:'var(--pearl-muted)'}}>Aterrizan pronto</div><div style={{fontSize:'1.35rem',fontWeight:800,color:'#F2C94C'}}>{passportHeat.city.landing_soon}</div></div>
+            <div className="glass-dark" style={{padding:12,borderRadius:12}}><div style={{fontSize:'.72rem',color:'var(--pearl-muted)'}}>Calor total</div><div style={{fontSize:'1.35rem',fontWeight:800,color:'#F2C94C'}}>{passportHeat.city.total_heat}</div></div>
+          </div>
+        ) : null}
+        <div style={{marginTop:14}}>
+          <div style={{fontSize:'.72rem',color:'#F2C94C',fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',marginBottom:8}}>Ciudades calientes</div>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+            {(passportHeat?.top_cities||[]).length ? passportHeat.top_cities.map(c=>(
+              <button key={c.city} className="chip" onClick={()=>{ setForm(f=>({...f,passport_city:c.city})); loadPassportHeat(c.city); }} style={{cursor:'pointer'}}>{c.city} · {c.heat}</button>
+            )) : <span style={{fontSize:'.8rem',color:'var(--pearl-muted)'}}>Activa tu ciudad para ver el mapa de calor.</span>}
+          </div>
+        </div>
       </div>
 
       <div className="glass" style={{padding:18,marginBottom:16,borderColor:'rgba(212,160,23,.3)'}}>
